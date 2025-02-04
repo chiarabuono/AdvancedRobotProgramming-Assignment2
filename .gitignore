@@ -1,0 +1,32 @@
+# Ignora tutto
+*
+
+# Ignora i file .gitignore
+!.gitignore
+
+# Non ignorare i file .c
+!*.c
+
+# Non ignorare i file .h
+!*.h
+
+# Non ignorare i readme
+!*.md
+
+# Non ignorare i file .json
+!*.json
+
+# Non ignorare il Makefile
+!Makefile
+
+#Non ignorare la cartella .vscode
+!**/.vscode/
+
+#Non ignorare la cartella .vscode
+!**/cJSON/
+
+#Non ignorare la cartella .vscode
+!**/include/
+
+#Non ignorare la cartella .vscode
+!**/src/
