@@ -14,6 +14,7 @@
 #include <iostream>
 #include <thread>
 #include <chrono>
+#include "auxfunc.h"
 
 using namespace eprosima::fastdds::dds;
 
@@ -25,17 +26,19 @@ private:
     DataReader* reader_;
     Topic* topic_;
     TypeSupport type_;
+    MyObstacles received_obstacles_;  // Variabile che contiene i dati ricevuti
 
     class SubListener : public DataReaderListener
     {
     public:
-        SubListener();
+        SubListener(ObstacleSubscriber* parent);
         ~SubListener() override;
         void on_subscription_matched(DataReader*, const SubscriptionMatchedStatus& info) override;
         void on_data_available(DataReader* reader) override;
 
         Obstacles my_message_;
         std::atomic_int samples_;
+        ObstacleSubscriber* parent_;  // Puntatore alla classe principale
     } listener_;
 
 public:
@@ -43,7 +46,8 @@ public:
     ~ObstacleSubscriber();
 
     bool init();
-    void run(uint32_t samples);
+    void run();
+    MyObstacles getMyObstacles() const;  // Metodo per accedere ai dati ricevuti
 };
 
 #endif // HELLO_WORLD_SUBSCRIBER_HPP

@@ -10,6 +10,7 @@
 #include <fastdds/dds/subscriber/Subscriber.hpp>
 #include <fastdds/dds/topic/TypeSupport.hpp>
 #include "obst_subscriber.hpp"  // Include the header file
+#include "auxfunc.h"
 
 using namespace eprosima::fastdds::dds;
 
@@ -22,6 +23,7 @@ ObstacleSubscriber::ObstacleSubscriber()
     , topic_(nullptr)
     , reader_(nullptr)
     , type_(new ObstaclesPubSubType())
+    , listener_(this)  // Passiamo il riferimento della classe principale al listener
 {
 }
 
@@ -57,7 +59,7 @@ bool ObstacleSubscriber::init()
     type_.register_type(participant_);
 
     // Create the subscriptions Topic
-    topic_ = participant_->create_topic("CalculatorTopic", type_.get_type_name(), TOPIC_QOS_DEFAULT);
+    topic_ = participant_->create_topic("topic1", type_.get_type_name(), TOPIC_QOS_DEFAULT);
 
     if (topic_ == nullptr)
     {
@@ -83,17 +85,19 @@ bool ObstacleSubscriber::init()
     return true;
 }
 
-void ObstacleSubscriber::run(uint32_t samples)
-{
-    while (listener_.samples_ < samples)
-    {
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    }
+void ObstacleSubscriber::run(){
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
 }
 
+MyObstacles ObstacleSubscriber::getMyObstacles() const
+{
+    return received_obstacles_;
+}
+
+
 // Implement the listener class methods
-ObstacleSubscriber::SubListener::SubListener()
-    : samples_(0)
+ObstacleSubscriber::SubListener::SubListener(ObstacleSubscriber* parent)
+    : samples_(0), parent_(parent)
 {
 }
 
@@ -117,6 +121,17 @@ void ObstacleSubscriber::SubListener::on_subscription_matched(DataReader* reader
     }
 }
 
+void convertObstaclesToMyObstacles(const Obstacles& obstacles, MyObstacles& myObstacles)
+{
+    myObstacles.number = obstacles.obstacles_number();
+
+    for (int i = 0; i < myObstacles.number; i++)
+    {
+        myObstacles.x[i] = obstacles.obstacles_x()[i];
+        myObstacles.y[i] = obstacles.obstacles_y()[i];
+    }
+}
+
 void ObstacleSubscriber::SubListener::on_data_available(DataReader* reader)
 {
     SampleInfo info;
@@ -124,8 +139,7 @@ void ObstacleSubscriber::SubListener::on_data_available(DataReader* reader)
     {
         if (info.valid_data)
         {
-            samples_++;
-            std::cout << "#1: " << my_message_.obstacles_number() << std::endl;
+            convertObstaclesToMyObstacles(my_message_, parent_->received_obstacles_);
         }
     }
 }

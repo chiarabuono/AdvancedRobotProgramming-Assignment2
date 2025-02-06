@@ -36,7 +36,7 @@ void sig_handler(int signo) {
 }
 
 int canSpawnPrev(int x_pos, int y_pos) {
-    for (int i = 0; i < numTarget; i++) {
+    for (int i = 0; i < targets.number; i++) {
         if (abs(x_pos - targets.x[i]) <= NO_SPAWN_DIST && abs(y_pos - targets.y[i]) <= NO_SPAWN_DIST) return 0;
     }
     return 1;
@@ -45,7 +45,7 @@ int canSpawnPrev(int x_pos, int y_pos) {
 void createTargets() {
     int x_pos, y_pos;
 
-    for (int i = 0; i < numTarget; i++)
+    for (int i = 0; i < targets.number; i++)
     {
         do {
             x_pos = rand() % (WINDOW_LENGTH - 1);
@@ -83,7 +83,7 @@ int main(int argc, char *argv[]) {
     targets.y[i] = 0;
     }
 
-    targets.number= 10;
+    targets.number = 10;
     
     // Create the publisher
     TargetPublisher myPublisher;

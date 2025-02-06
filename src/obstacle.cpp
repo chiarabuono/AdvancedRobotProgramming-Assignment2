@@ -22,12 +22,11 @@
 // management target
 #define PERIODO 3
 
-int pid;
-int fds[4];
-int numObstacles;
-
 MyObstacles obstacles;
 FILE *obstFile = NULL;
+
+int pid;
+int fds[4];
 
 void sig_handler(int signo) {
     if (signo == SIGUSR1)
@@ -43,7 +42,7 @@ void sig_handler(int signo) {
 }
 
 int canSpawnPrev(int x_pos, int y_pos) {
-    for (int i = 0; i < numObstacles; i++) {
+    for (int i = 0; i < obstacles.number; i++) {
         if (abs(x_pos - obstacles.x[i]) <= NO_SPAWN_DIST && abs(y_pos - obstacles.y[i]) <= NO_SPAWN_DIST) return 0;
     }
     return 1;
@@ -53,7 +52,7 @@ void createObstacles() {
 
     int x_pos, y_pos;
 
-    for (int i = 0; i < numObstacle; i++){
+    for (int i = 0; i < obstacles.number; i++){
     
         do {
             x_pos = rand() % (WINDOW_LENGTH - 1);
@@ -91,7 +90,9 @@ int main(int argc, char *argv[]) {
         obstacles.y[i] = 0;
     }
 
-        // Create the publisher
+    obstacles.number = 10;
+    
+    // Create the publisher
     ObstaclePublisher myPublisher;
 
     // Initialize the publisher
@@ -108,7 +109,7 @@ int main(int argc, char *argv[]) {
     while (1) {
 
         createObstacles();
-        myPublisher.run(10);
+        myPublisher.publish(obstacles);
         sleep(PERIODO);
     }
 }

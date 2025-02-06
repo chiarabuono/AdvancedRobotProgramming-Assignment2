@@ -1,5 +1,5 @@
-#ifndef OBST_PUBLISHER_HPP
-#define OBST_PUBLISHER_HPP
+#ifndef TARG_PUBLISHER_HPP
+#define TARG_PUBLISHER_HPP
 
 #include "Generated/TargetsPubSubTypes.hpp"
 #include <fastdds/dds/domain/DomainParticipant.hpp>
@@ -12,7 +12,6 @@
 #include <iostream>
 #include <thread>
 #include <chrono>
-# include"auxfunc.h"
 
 using namespace eprosima::fastdds::dds;
 
@@ -25,7 +24,6 @@ private:
     Topic* topic_;
     DataWriter* writer_;
     TypeSupport type_;
-    MyTargets received_targets_;  // Variabile che contiene i dati ricevuti
 
     class PubListener : public DataWriterListener
     {
@@ -44,4 +42,4 @@ public:
     bool publish(MyTargets targets);
 };
 
-#endif // OBST_PUBLISHER_HPP
+#endif // TARG_PUBLISHER_HPP

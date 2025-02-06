@@ -1,5 +1,5 @@
-#ifndef OBST_SUBSCRIBER_HPP
-#define OBST_SUBSCRIBER_HPP
+#ifndef TARG_SUBSCRIBER_HPP
+#define TARG_SUBSCRIBER_HPP
 
 #include "Generated/TargetsPubSubTypes.hpp"
 #include <fastdds/dds/domain/DomainParticipant.hpp>
@@ -50,4 +50,4 @@ public:
     MyTargets getMyTargets() const;  // Metodo per accedere ai dati ricevuti
 };
 
-#endif // OBST_SUBSCRIBER_HPP
+#endif // TARG_SUBSCRIBER_HPP

@@ -39,9 +39,7 @@ public:
     ~ObstaclePublisher();
 
     bool init();
-    bool publish();
-    void run(uint32_t samples);
-    double fRand(double fMin, double fMax);
+    bool publish(MyObstacles myObstacles);
 };
 
 #endif // OBST_PUBLISHER_HPP

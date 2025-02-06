@@ -57,7 +57,7 @@ bool TargetSubscriber::init()
     type_.register_type(participant_);
 
     // Create the subscriptions Topic
-    topic_ = participant_->create_topic("CalculatorTopic", type_.get_type_name(), TOPIC_QOS_DEFAULT);
+    topic_ = participant_->create_topic("topic2", type_.get_type_name(), TOPIC_QOS_DEFAULT);
 
     if (topic_ == nullptr)
     {
@@ -83,8 +83,7 @@ bool TargetSubscriber::init()
     return true;
 }
 
-void TargetSubscriber::run()
-{
+void TargetSubscriber::run(){
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 }
 

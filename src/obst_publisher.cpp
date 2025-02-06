@@ -16,6 +16,7 @@
 #include <fastdds/dds/topic/TypeSupport.hpp>
 
 #include "obst_publisher.hpp"  // Include the header file
+#include "auxfunc.h"
 
 using namespace eprosima::fastdds::dds;
 
@@ -50,7 +51,6 @@ ObstaclePublisher::~ObstaclePublisher()
 
 bool ObstaclePublisher::init()
 {
-    my_message_.obstacles_number(5);
 
     DomainParticipantQos participantQos;
     participantQos.name("Participant_publisher");
@@ -65,7 +65,7 @@ bool ObstaclePublisher::init()
     type_.register_type(participant_);
 
     // Create the publications Topic
-    topic_ = participant_->create_topic("CalculatorTopic", type_.get_type_name(), TOPIC_QOS_DEFAULT);
+    topic_ = participant_->create_topic("topic1", type_.get_type_name(), TOPIC_QOS_DEFAULT);
 
     if (topic_ == nullptr)
     {
@@ -90,35 +90,27 @@ bool ObstaclePublisher::init()
     return true;
 }
 
-bool ObstaclePublisher::publish()
-{
-    if (listener_.matched_ > 0)
-    {
-        my_message_.obstacles_number(my_message_.obstacles_number() + 1);
+bool ObstaclePublisher::publish(MyObstacles myObstacles){
+    
+    if (listener_.matched_ > 0){
+
+        my_message_.obstacles_x().clear();
+        my_message_.obstacles_y().clear();
+
+        for (int i = 0; i < myObstacles.number; i++){
+            my_message_.obstacles_x().push_back(myObstacles.x[i]);
+            my_message_.obstacles_y().push_back(myObstacles.y[i]);
+        }
+
+        my_message_.obstacles_number(myObstacles.number);
+
         writer_->write(&my_message_);
         return true;
     }
     return false;
-}
-
-void ObstaclePublisher::run(uint32_t samples)
-{
-    uint32_t samples_sent = 0;
-    while (samples_sent < samples)
-    {
-        if (publish())
-        {
-            samples_sent++;
-            std::cout << "#1: " << my_message_.obstacles_number() << std::endl;
-        }
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-    }
-}
-
-double ObstaclePublisher::fRand(double fMin, double fMax)
-{
-    double f = (double)rand() / RAND_MAX;
-    return fMin + f * (fMax - fMin);
+    //--------------------
+    // TO LOG
+    //--------------------
 }
 
 // Implement the listener class methods
