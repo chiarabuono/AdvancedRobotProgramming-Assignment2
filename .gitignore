@@ -7,8 +7,17 @@
 # Non ignorare i file .c
 !*.c
 
+# Non ignorare i file .c
+!*.cpp
+
 # Non ignorare i file .h
 !*.h
+
+# Non ignorare i file .h
+!*.hpp
+
+# Non ignorare i file .h
+!*.idl
 
 # Non ignorare i readme
 !*.md

@@ -284,38 +284,6 @@ void printInputMessageToFile(FILE *file, inputMessage* msg) {
     fflush(file);
 }
 
-void printMessageToFile(FILE *file, Message* msg) {
-    fprintf(file, "\n");
-    fprintf(file, "msg: %c\n", msg->msg);
-    fprintf(file, "level: %d\n", msg->level);
-    fprintf(file, "difficulty: %d\n", msg->difficulty);
-    fprintf(file, "input: %s\n", msg->input);
-
-    fprintf(file, "\ndroneInfo:\n");
-    fprintf(file, "  x: %d\n", msg->drone.x);
-    fprintf(file, "  y: %d\n", msg->drone.y);
-    fprintf(file, "  speedX: %.2f\n", msg->drone.speedX);
-    fprintf(file, "  speedY: %.2f\n", msg->drone.speedY);
-    fprintf(file, "  forceX: %.2f\n", msg->drone.forceX);
-    fprintf(file, "  forceY: %.2f\n", msg->drone.forceY);
-
-    fprintf(file, "\nTargets:\n");
-    for(int i = 0; i < MAX_TARGET; i++ ){
-            fprintf(file, "targ[%d] = %d,%d,%d\n", i, msg->targets.x[i], msg->targets.y[i], msg->targets.value[i]);
-        }
-
-    fprintf(file, "incTarg: %d\n", msg->targets.incr);
-
-
-    fprintf(file, "\nObstacles:\n");
-    for(int i = 0; i < MAX_OBSTACLES; i++ ){
-            fprintf(file, "obs[%d] = %d,%d\n", i, msg->obstacles.x[i], msg->obstacles.y[i]);
-            fflush(file);
-    }
-    fprintf(file, "incObst: %d\n", msg->obstacles.incr);
-
-    fflush(file);
-}
 
 void msgInit(Message* status){
     status->msg = 'R';
@@ -332,7 +300,7 @@ void msgInit(Message* status){
     for(int i = 0; i < MAX_TARGET; i++){
         status->targets.x[i] = 0;
         status->targets.y[i] = 0;
-        status->targets.value[i] = 0;
+        status->targets.number = 0;
     }
 
     for(int i = 0; i < MAX_OBSTACLES; i++){
