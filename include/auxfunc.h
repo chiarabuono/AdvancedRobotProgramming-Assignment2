@@ -26,9 +26,6 @@
 
 #define TARGET_DETECTION 1
 
-#define len_str_targets 6 * MAX_TARGET + 2
-#define len_str_obstacles 6 * MAX_OBSTACLES + 2
-
 #define MAX_LINE_LENGTH 100
 #define MAX_FILE_SIZE 1024
 
@@ -43,8 +40,6 @@ extern int numObstacle;
 extern int incTime;
 extern int incTarget;
 extern int incObstacle;
-
-
 
 typedef struct {
     int x;
@@ -67,11 +62,11 @@ typedef struct {
 typedef struct {
     int x[MAX_TARGET];
     int y[MAX_TARGET];
+    int hit[MAX_TARGET];
     int number;
 } MyTargets;
 
-typedef struct
-{
+typedef struct {
     int x[MAX_OBSTACLES];
     int y[MAX_OBSTACLES];
     int number;
@@ -79,8 +74,6 @@ typedef struct
 
 typedef struct {
     char msg;
-    int level;
-    int difficulty;
     char input[10];
     Drone_bb drone;
     MyTargets targets;
@@ -91,8 +84,6 @@ typedef struct{
     char msg;
     char name[MAX_LINE_LENGTH];
     char input[10];
-    int difficulty;
-    int level;
     int score;
     Drone_bb droneInfo;
 } inputMessage;

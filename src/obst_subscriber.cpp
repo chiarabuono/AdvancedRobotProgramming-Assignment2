@@ -23,7 +23,8 @@ ObstacleSubscriber::ObstacleSubscriber()
     , topic_(nullptr)
     , reader_(nullptr)
     , type_(new ObstaclesPubSubType())
-    , listener_(this)  // Passiamo il riferimento della classe principale al listener
+    , listener_(this)  
+    , new_data_(false)
 {
 }
 
@@ -86,18 +87,22 @@ bool ObstacleSubscriber::init()
 }
 
 void ObstacleSubscriber::run(){
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    while(true){
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    }
 }
 
-MyObstacles ObstacleSubscriber::getMyObstacles() const
+MyObstacles ObstacleSubscriber::getMyObstacles()
 {
+    listener_.new_data_ = false;  // Resetta il flag quando i dati vengono letti
     return received_obstacles_;
 }
 
 
 // Implement the listener class methods
 ObstacleSubscriber::SubListener::SubListener(ObstacleSubscriber* parent)
-    : samples_(0), parent_(parent)
+    : samples_(0), parent_(parent), new_data_(false)
 {
 }
 
@@ -132,6 +137,11 @@ void convertObstaclesToMyObstacles(const Obstacles& obstacles, MyObstacles& myOb
     }
 }
 
+bool ObstacleSubscriber::hasNewData() const
+{
+    return listener_.new_data_;
+}
+
 void ObstacleSubscriber::SubListener::on_data_available(DataReader* reader)
 {
     SampleInfo info;
@@ -139,6 +149,7 @@ void ObstacleSubscriber::SubListener::on_data_available(DataReader* reader)
     {
         if (info.valid_data)
         {
+            new_data_ = true;
             convertObstaclesToMyObstacles(my_message_, parent_->received_obstacles_);
         }
     }

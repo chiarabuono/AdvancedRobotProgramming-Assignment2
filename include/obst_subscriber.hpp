@@ -27,6 +27,7 @@ private:
     Topic* topic_;
     TypeSupport type_;
     MyObstacles received_obstacles_;  // Variabile che contiene i dati ricevuti
+    bool new_data_;
 
     class SubListener : public DataReaderListener
     {
@@ -39,6 +40,7 @@ private:
         Obstacles my_message_;
         std::atomic_int samples_;
         ObstacleSubscriber* parent_;  // Puntatore alla classe principale
+        bool new_data_;
     } listener_;
 
 public:
@@ -47,7 +49,8 @@ public:
 
     bool init();
     void run();
-    MyObstacles getMyObstacles() const;  // Metodo per accedere ai dati ricevuti
+    MyObstacles getMyObstacles();  // Metodo per accedere ai dati ricevuti
+    bool hasNewData() const;
 };
 
 #endif // HELLO_WORLD_SUBSCRIBER_HPP

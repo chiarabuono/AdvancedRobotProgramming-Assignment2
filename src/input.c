@@ -27,8 +27,6 @@ char *menuBtn[2] = {"Press P to pause", "Press Q to save & quit"};
 int pid;
 int fds[4]; 
 
-int level = 0;
-
 float droneInfo[6] = {0.0};
 char droneInfo_str[40];
 
@@ -51,7 +49,6 @@ inputMessage inputStatus;
 Message msg;
 Message status;
 
-Player leaderboard[10];
 
 void sig_handler(int signo) {
     if (signo == SIGUSR1) {
@@ -171,50 +168,6 @@ void setName() {
     wrefresh(stdscr);
 }
 
-void drawDifficulty() {
-    werase(stdscr); // Pulisce la finestra
-    box(stdscr, 0, 0); // Disegna il bordo della finestra
-
-    // Testo delle righe
-    const char *line1 = "Choose the difficulty you want to play";
-    const char *line2 = "1 - easy: Target and obstacles are static";
-    const char *line3 = "2 - hard: Target and obstacles are moving";
-
-    // Calcolo delle posizioni verticali
-    int y1 = nh / 2 - 1; // Posizione verticale per la prima riga
-    int y2 = nh / 2;     // Posizione verticale per la seconda riga
-    int y3 = nh / 2 + 1; // Posizione verticale per la terza riga
-
-    // Calcolo delle posizioni orizzontali (centrato)
-    int x1 = (nw - strlen(line1)) / 2;
-    int x2 = (nw - strlen(line2)) / 2;
-    int x3 = (nw - strlen(line3)) / 2;
-
-    // Stampa le righe centrate
-    mvwprintw(stdscr, y1, x1, "%s", line1);
-    mvwprintw(stdscr, y2, x2, "%s", line2);
-    mvwprintw(stdscr, y3, x3, "%s", line3);
-
-    // Aggiorna la finestra
-    wrefresh(stdscr);
-}
-
-void setDifficulty(){
-    drawDifficulty();
-    int ch = 0;
-    while (ch != 49 && ch != 50) {
-        ch = getch();
-        if(ch == 49){
-            inputStatus.difficulty = 1;
-        }else if(ch == 50){
-            inputStatus.difficulty = 2;
-        }
-        drawDifficulty();
-        usleep(10000); 
-    }
-    werase(stdscr);
-}
-
 int keyAlreadyUsed(int key, int index ){
     for(int i = 0; i < index + 1; i++){
         if(key == btnValues[i] || key == MY_KEY_p || key == MY_KEY_q || key == MY_KEY_Q || key == MY_KEY_P){
@@ -294,8 +247,7 @@ void mainMenu(){
     disp = CHOOSEBUTTON;
     setBtns();
     disp = CHOOSEDIFF;
-    setDifficulty();
-    LOGCONFIG(inputStatus);
+
     
     werase(stdscr);
     wrefresh(stdscr);
@@ -381,34 +333,6 @@ void drawInfo() {
         mvwprintw(control, initialrow2 + i, col, "%s", menuBtn[i]);
         wrefresh(control);
     }
-
-    // Menu part 3 
-
-    int initialrow3 = ((2 * nh / 3) + ((nh / 3 - 10) / 2) > 0) ? (( 2 * nh / 3) + ((nh / 3 - 10) / 2)) : (2 * nh / 3);
-    
-    mvwprintw(control, initialrow3 - 1, ((nw / 2) - strlen("LEADERBOARD:")) / 2, "%s", "LEADERBOARD:");
-    for (int i = 0; i < 10; i++) {
-
-    // Crea una stringa playerInfo con i dati dei giocatori
-    char playerInfo[150];
-    snprintf(playerInfo, sizeof(playerInfo), "Player: %s, score: %d, level: %d", leaderboard[i].name, leaderboard[i].score, leaderboard[i].level);
-
-    // Calcola le lunghezze effettive delle stringhe
-    int textLen = strlen(playerInfo);
-
-    // Calcola la colonna per centrare l'intera combinazione
-    int col = ((nw / 2) - textLen) / 2;
-
-    // fprintf(inputFile,"Row: %d, Col: %d\n", initialrow + i, col);
-    // fflush(inputFile);
-
-    // Stampa la riga centrata
-    mvwprintw(control, initialrow3 + i, col, "%s", playerInfo);
-    wrefresh(control);
-}
-
-    
-
 }
 
 void resizeHandler(){
@@ -504,122 +428,16 @@ void readConfig() {
 
     // Salva i dati direttamente in inputStatus
     strcpy(inputStatus.name, cJSON_GetObjectItemCaseSensitive(json, "PlayerName")->valuestring);
-    inputStatus.difficulty = cJSON_GetObjectItemCaseSensitive(json, "Difficulty")->valueint;
-    inputStatus.level = cJSON_GetObjectItemCaseSensitive(json, "StartingLevel")->valueint;
 
     // Aggiorna le variabili globali
-    levelTime = cJSON_GetObjectItemCaseSensitive(json, "LevelTime")->valueint;
-    incTime = cJSON_GetObjectItemCaseSensitive(json, "TimeIncrement")->valueint;
     numTarget = cJSON_GetObjectItemCaseSensitive(json, "TargetNumber")->valueint;
     numObstacle = cJSON_GetObjectItemCaseSensitive(json, "ObstacleNumber")->valueint;
-    incTarget = cJSON_GetObjectItemCaseSensitive(json, "TargetIncrement")->valueint;
-    incObstacle = cJSON_GetObjectItemCaseSensitive(json, "ObstacleIcrement")->valueint;
 
     // Per array
     cJSON *numbersArray = cJSON_GetObjectItemCaseSensitive(json, "DefaultBTN"); // questo è un array
     LOGINPUTCONFIGURATION(numbersArray);
 
-    // Leggi i dati dei giocatori
-    cJSON *playersArray = cJSON_GetObjectItemCaseSensitive(json, "Players");
-    int playersArraySize = cJSON_GetArraySize(playersArray);
-
-    for (int i = 0; i < playersArraySize; ++i) {
-        cJSON *player = cJSON_GetArrayItem(playersArray, i);
-        if (cJSON_IsObject(player)) {
-            strcpy(leaderboard[i].name, cJSON_GetObjectItemCaseSensitive(player, "name")->valuestring);
-            leaderboard[i].score = cJSON_GetObjectItemCaseSensitive(player, "score")->valueint;
-            leaderboard[i].level = cJSON_GetObjectItemCaseSensitive(player, "level")->valueint;
-        }
-    }
-
     cJSON_Delete(json); // pulisci
-}
-
-void updateLeaderboard() {
-
-    // Crea un nuovo giocatore con i dati di status
-    Player currentPlayer;
-    strcpy(currentPlayer.name, inputStatus.name);
-    currentPlayer.score = inputStatus.score;
-    currentPlayer.level = inputStatus.level;
-
-    // Trova la posizione corretta per il giocatore corrente
-    int position = -1;
-    
-    int i = 9;
-    while(currentPlayer.score > leaderboard[i].score && i >= 0){
-        position = i;
-        i--;
-    }
-
-    // Se il giocatore corrente non supera nessuno dei giocatori esistenti, esci
-    if (position == -1) {
-        return;
-    }
-
-    // Inserisci il giocatore corrente nella posizione corretta e riorganizza gli altri
-    for (int i = 9; i > position; i--) {
-        leaderboard[i] = leaderboard[i - 1];
-    }
-
-    leaderboard[position] = currentPlayer;
-    LOGLEADERBOARD(leaderboard);
-}
-
-void updatePlayersInConfig() {
-    FILE *settingsfile = fopen("appsettings.json", "r+");
-    if (settingsfile == NULL) {
-        perror("Error opening the file");
-        return;
-    }
-
-    // Leggi il file esistente
-    int len = fread(jsonBuffer, 1, sizeof(jsonBuffer), settingsfile);
-    if (len <= 0) {
-        perror("Error reading the file");
-        return;
-    }
-    fclose(settingsfile);
-
-    cJSON *json = cJSON_Parse(jsonBuffer);
-    if (json == NULL) {
-        perror("Error parsing the file");
-        return;
-    }
-
-    // Aggiorna i dati dei giocatori
-    cJSON *playersArray = cJSON_GetObjectItemCaseSensitive(json, "Players");
-    if (!playersArray || !cJSON_IsArray(playersArray)) {
-        perror("Error finding the Players array in the file");
-        cJSON_Delete(json);
-        return;
-    }
-
-    for (int i = 0; i < 10; i++) {
-        cJSON *player = cJSON_GetArrayItem(playersArray, i);
-        if (cJSON_IsObject(player)) {
-            cJSON_ReplaceItemInObjectCaseSensitive(player, "name", cJSON_CreateString(leaderboard[i].name));
-            cJSON_ReplaceItemInObjectCaseSensitive(player, "score", cJSON_CreateNumber(leaderboard[i].score));
-            cJSON_ReplaceItemInObjectCaseSensitive(player, "level", cJSON_CreateNumber(leaderboard[i].level));
-        }
-    }
-
-    // Scrivi di nuovo nel file aggiornato con formattazione
-    settingsfile = fopen("appsettings.json", "w");
-    if (settingsfile == NULL) {
-        perror("Error opening the file for writing");
-        cJSON_Delete(json);
-        return;
-    }
-
-    char *jsonString = cJSON_Print(json);  // Usa cJSON_Print per la formattazione
-    fprintf(settingsfile, "%s", jsonString);
-    fflush(settingsfile);
-
-    // Pulisci la memoria
-    free(jsonString);
-    cJSON_Delete(json);
-    fclose(settingsfile);
 }
 
 void saveGame(){
@@ -635,7 +453,6 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Uso: %s <fd_str>\n", argv[0]);
         exit(1);
     }
-    signal(SIGTERM, handleLogFailure); // Register handler for logging errors
     
     // Opening log file
     inputFile = fopen("log/input.log", "a");
@@ -653,9 +470,6 @@ int main(int argc, char *argv[]) {
     }
 
     readConfig();
-
-    LOGLEADERBOARD(leaderboard);
-    LOGAMESETTINGS();
 
     // FDs reading
     char *fd_str = argv[1];

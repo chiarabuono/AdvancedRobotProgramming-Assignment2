@@ -271,8 +271,6 @@ void printInputMessageToFile(FILE *file, inputMessage* msg) {
     fprintf(file, "msg: %c\n", msg->msg);
     fprintf(file, "name: %s\n", msg->name);
     fprintf(file, "input: %s\n", msg->input);
-    fprintf(file, "difficulty: %d\n", msg->difficulty);
-    fprintf(file, "level: %d\n", msg->level);
     fprintf(file,"Score: %d\n", msg->score);
     fprintf(file, "droneInfo:\n");
     fprintf(file, "  x: %d\n", msg->droneInfo.x);
@@ -287,8 +285,6 @@ void printInputMessageToFile(FILE *file, inputMessage* msg) {
 
 void msgInit(Message* status){
     status->msg = 'R';
-    status->level = 0;
-    status->difficulty =0;
     strcpy(status->input,"Reset");
     status->drone.x = 0;
     status->drone.y = 0;
@@ -299,10 +295,10 @@ void msgInit(Message* status){
     
     for(int i = 0; i < MAX_TARGET; i++){
         status->targets.x[i] = 0;
-        status->targets.y[i] = 0;
-        status->targets.number = 0;
+        status->targets.y[i] = 0; 
+        status->targets.hit[i] = 0;
     }
-
+    status->targets.number = 0;
     for(int i = 0; i < MAX_OBSTACLES; i++){
         status->obstacles.x[i] = 0;
         status->obstacles.y[i] = 0;
@@ -313,8 +309,6 @@ void inputMsgInit(inputMessage* status){
     status->msg = 'R';
     strcpy(status->name,"Default");
     strcpy(status->input,"Reset");
-    status->difficulty =0;
-    status->level = 0;
     status->score = 0;
     status->droneInfo.x = 0;
     status->droneInfo.y = 0;

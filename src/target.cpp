@@ -85,11 +85,16 @@ int main(int argc, char *argv[]) {
 
     targets.number = 10;
     
+    //-------------------------
+    // LEGGERE NUM DA PARAMFILE
+    //--------------------------
+
+
     // Create the publisher
-    TargetPublisher myPublisher;
+    TargetPublisher targPub;
 
     // Initialize the publisher
-    if (!myPublisher.init()){      
+    if (!targPub.init()){      
 
         //------------------
         //  TO LOG
@@ -102,7 +107,7 @@ int main(int argc, char *argv[]) {
     while (1) {
 
         createTargets();
-        myPublisher.publish(targets);
+        targPub.publish(targets);
         sleep(PERIODT);
     }
 }

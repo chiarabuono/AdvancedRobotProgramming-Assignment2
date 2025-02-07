@@ -21,7 +21,8 @@ TargetSubscriber::TargetSubscriber()
     , topic_(nullptr)
     , reader_(nullptr)
     , type_(new TargetsPubSubType())
-    , listener_(this)  // Passiamo il riferimento della classe principale al listener
+    , listener_(this)
+    , new_data_(false)  // Inizializza new_data_
 {
 }
 
@@ -84,18 +85,22 @@ bool TargetSubscriber::init()
 }
 
 void TargetSubscriber::run(){
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    while(true){
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    }
 }
 
 // Implementazione del metodo per ottenere i dati ricevuti
-MyTargets TargetSubscriber::getMyTargets() const
+MyTargets TargetSubscriber::getMyTargets()
 {
+    listener_.new_data_ = false;  // Resetta il flag quando i dati vengono letti
     return received_targets_;
 }
 
 // Implementazione del listener
 TargetSubscriber::SubListener::SubListener(TargetSubscriber* parent)
-    : samples_(0), parent_(parent)
+    : samples_(0), parent_(parent), new_data_(false)
 {
 }
 
@@ -130,6 +135,12 @@ void convertTargetsToMyTargets(const Targets& targets, MyTargets& myTargets)
     }
 }
 
+bool TargetSubscriber::hasNewData() const
+{
+    return listener_.new_data_;
+}
+
+
 void TargetSubscriber::SubListener::on_data_available(DataReader* reader)
 {
     SampleInfo info;
@@ -137,7 +148,7 @@ void TargetSubscriber::SubListener::on_data_available(DataReader* reader)
     {
         if (info.valid_data)
         {
-            // Usiamo il puntatore a TargetSubscriber per aggiornare received_targets_
+            new_data_ = true;
             convertTargetsToMyTargets(my_message_, parent_->received_targets_);
         }
     }

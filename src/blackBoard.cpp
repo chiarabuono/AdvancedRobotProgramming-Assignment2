@@ -14,6 +14,8 @@
 #include "auxfunc.h"
 #include <signal.h>
 #include "log.h"
+#include "targ_subscriber.hpp"
+#include "obst_subscriber.hpp"
 
 // process to whom that asked or received
 #define askwr 1
@@ -29,11 +31,6 @@
 #define SCALERATIO 1
 
 #define PERIODBB 10000  // [us]
-
-#define EASY 1
-#define HARD 2
-
-#define MAPRESET 5 // [s]
 
 int nh, nw;
 float scaleh = 1.0, scalew = 1.0;
@@ -59,35 +56,15 @@ Message msg;
 inputMessage inputMsg;
 inputMessage inputStatus;
 
+TargetSubscriber targSub;
+ObstacleSubscriber obstSub;
+
 int pids[6] = {0};  // Initialize PIDs to 0
 
 int collision = 0;
 int targetsHit = 0;
 
-float resetMap = MAPRESET; // [s]
 
-float elapsedTime = 0;
-int remainingTime = 0;
-char difficultyStr[10];
-
-void sig_handler(int signo) {
-    if (signo == SIGUSR1) {
-        handler(BLACKBOARD);
-    } else if (signo == SIGTERM) {
-        LOGBBDIED();
-        fclose(file);
-        fclose(logFile);
-        close(fds[DRONE][recwr]);
-        close(fds[DRONE][askrd]);
-        close(fds[INPUT][recwr]);
-        close(fds[INPUT][askrd]);
-        close(fds[OBSTACLE][recwr]);
-        close(fds[OBSTACLE][askrd]);
-        close(fds[TARGET][recwr]);
-        close(fds[TARGET][askrd]);
-        exit(EXIT_SUCCESS);
-    }
-}
 
 void storePreviousPosition(Drone_bb *drone) {
 
@@ -108,63 +85,19 @@ void resizeHandler(){
     map = newwin(nh - 2, nw, 2, 0); 
 }
 
-void resetTargetValue(Message* status){
-    for(int i = 0; i < MAX_TARGET; i++){
-        if(i < numTarget + status->targets.incr){
-            status->targets.value[i] = i + 1;
-        }
-        else{
-            status->targets.value[i] = 0;
-        }
-    }
-}
-
 void mapInit(FILE *file){
 
     // read initial drone position
     readMsg(fds[DRONE][askrd], &status,
                 "[BB] Error reading drone position\n", file);
     LOGDRONEINFO(status.drone);
-
-    status.level = inputStatus.level;
-    status.difficulty = inputStatus.difficulty;
-
-    status.targets.incr = status.level*status.difficulty*incTarget;
-    status.obstacles.incr = status.level*status.difficulty*incObstacle;
-
-    msg.targets.incr = status.targets.incr;
-    msg.obstacles.incr = status.obstacles.incr;
-
-    // fprintf(file, "incr: %d,%d\n", status.targets.incr,status.obstacles.incr);
-    // fflush(file);
-
-    resetTargetValue(&status);
-    // printMessageToFile(file, &status);
-
-
-    // send drone position to target
-    writeMsg(fds[TARGET][recwr], &status, 
-            "[BB] Error sending drone position to [TARGET]\n", file);
     
-    
-    // receiving target position
-    readMsg(fds[TARGET][askrd], &status,
-            "[BB] Error reading target\n", file);
-    
-    // printMessageToFile(file, &status);
+    while (!targSub.hasNewData() || !obstSub.hasNewData()){
+        usleep(100000);
+    }
 
-    // fprintf(file, "incr: %d,%d\n", status.targets.incr,status.obstacles.incr);
-    // fflush(file);
-
-
-    // send drone and target position to obstacle
-    writeMsg(fds[OBSTACLE][recwr], &status, 
-            "[BB] Error sending drone and target position to [OBSTACLE]\n", file);
-
-    // receiving obstacle position
-    readMsg(fds[OBSTACLE][askrd], &status,
-            "[BB] Error reading obstacles positions\n", file);
-
+    status.targets = targSub.getMyTargets();
+    status.obstacles = obstSub.getMyObstacles();
 
     //Update drone position
     writeMsg(fds[DRONE][recwr], &status, 
@@ -176,8 +109,6 @@ void mapInit(FILE *file){
     inputStatus.msg = 'B';
     writeInputMsg(fds[INPUT][recwr], &inputStatus, 
                 "Error sending ack", file);
-
-    LOGNEWMAP(status);
 }
 
 void drawDrone(WINDOW * win){
@@ -197,7 +128,7 @@ void drawDrone(WINDOW * win){
 void drawObstacle(WINDOW * win){
     wattron(win, A_BOLD); // Attiva il grassetto
     wattron(win, COLOR_PAIR(2)); 
-    for(int i = 0; i < numObstacle + status.obstacles.incr; i++){
+    for(int i = 0; i < status.obstacles.number; i++){
         mvwprintw(win, (int)(status.obstacles.y[i]*scaleh), (int)(status.obstacles.x[i]*scalew), "0");
     }
     wattroff(win, COLOR_PAIR(2)); 
@@ -207,10 +138,10 @@ void drawObstacle(WINDOW * win){
 void drawTarget(WINDOW * win) {
     wattron(win, A_BOLD); // Attiva il grassetto
     wattron(win, COLOR_PAIR(3)); 
-    for(int i = 0; i < numTarget + status.targets.incr; i++){
-        if (status.targets.value[i] == 0) continue;
+    for(int i = 0; i < status.targets.number; i++){
+        if (status.targets.hit[i] == 0) continue;
         char val_str[2];
-        sprintf(val_str, "%d", (status.targets.value[i] * status.difficulty)); // Converte il valore in stringa
+        sprintf(val_str, "%d", i + 1); // Converte il valore in stringa
         mvwprintw(win, (int)(status.targets.y[i] * scaleh), (int)(status.targets.x[i] * scalew), "%s", val_str); // Usa un formato esplicito
     } 
     wattroff(win, COLOR_PAIR(3)); 
@@ -222,15 +153,14 @@ void drawMenu(WINDOW* win) {
     wattron(win, A_BOLD); // Attiva il grassetto
 
     // Preparazione delle stringhe
-    char score_str[10], diff_str[10], time_str[10], level_str[10];
+    char score_str[10], diff_str[10];
     sprintf(score_str, "%d", inputStatus.score);
     sprintf(diff_str, "%s", difficultyStr);
-    sprintf(time_str, "%d", remainingTime);
-    sprintf(level_str, "%d", status.level);
+
 
     // Array con le etichette e i valori corrispondenti
-    const char* labels[] = { "Score: ", "Player: ", "Difficulty: ", "Time: ", "Level: " };
-    const char* values[] = { score_str, inputStatus.name, diff_str, time_str, level_str };
+    const char* labels[] = { "Score: ", "Player: "};
+    const char* values[] = { score_str, inputStatus.name};
 
     int num_elements = 5; // Numero di elementi nel menu
 
@@ -280,14 +210,14 @@ int randomSelect(int n) {
 
 void detectCollision(Message* status, Drone_bb * prev) {
     
-    for (int i = 0; i < numTarget + status->targets.incr; i++) {
+    for (int i = 0; i < status->targets.number; i++) {
         
-        if (status->targets.value[i] && (((prev->x <= status->targets.x[i] + 2 && status->targets.x[i] - 2 <= status->drone.x)  &&
+        if (status->targets.hit[i] && (((prev->x <= status->targets.x[i] + 2 && status->targets.x[i] - 2 <= status->drone.x)  &&
             (prev->y <= status->targets.y[i] + 2 && status->targets.y[i]- 2 <= status->drone.y) )||
             ((prev->x >= status->targets.x[i] - 2 && status->targets.x[i] >= status->drone.x + 2) &&
             (prev->y >= status->targets.y[i] - 2 && status->targets.y[i] >= status->drone.y + 2) ))){
-                inputStatus.score += (status->targets.value[i]* status->difficulty);
-                status->targets.value[i] = 0;
+                inputStatus.score += i;
+                status->targets.hit[i] = 1;
                 collision = 1;
                 targetsHit++;   
         }
@@ -297,65 +227,26 @@ void detectCollision(Message* status, Drone_bb * prev) {
 
 void createNewMap(){
 
-    readMsg(fds[TARGET][askrd],  &msg,
-            "[BB] Error reading ready from target", file);
-    
+    storePreviousPosition(&status.drone);
+
+    readMsg(fds[DRONE][askrd],  &msg,
+        "[BB] Reading ready from [DRONE]", file);
+
     if(msg.msg == 'R'){
 
-        // fprintf(file, "Sending drone position to [TARGET]\n");
-        // fflush(file);
+        LOGDRONEINFO(status.drone);
 
-        writeMsg(fds[TARGET][recwr], &status, 
-            "[BB] Error sending drone position to target", file);
+        status.msg = 'M';
 
-        // fprintf(file, "waiting for new targets\n");
-        // fflush(file);
-
-        readMsg(fds[TARGET][askrd], &status,
-            "[BB] Error reading target positions", file);
-        
-        // fprintf(file,"\n");
-        // for(int i = 0; i < MAX_TARGET; i++ ){
-        //     fprintf(file, "targ[%d] = %d,%d,%d\n", i, status.targets.x[i], status.targets.y[i], status.targets.value[i]);
-        //     fflush(file);
-        // }
-
-        // fprintf(file, "Sending new targets to obstacle\n");
-        // fflush(file);
-
-        writeMsg(fds[OBSTACLE][recwr], &status, 
-            "[BB] Error sending drone and target position to [OBSTACLE]", file);
-
-        // fprintf(file, "Reading obstacles positions from [OB]\n");
-        // fflush(file);
-
-        readMsg(fds[OBSTACLE][askrd], &status,
-            "[BB] Reading obstacles positions", file);
-
+        writeMsg(fds[DRONE][recwr], &status, 
+                "[BB] Error asking drone position", file);
 
         storePreviousPosition(&status.drone);
 
-        readMsg(fds[DRONE][askrd],  &msg,
-            "[BB] Reading ready from [DRONE]", file);
-
-        if(msg.msg == 'R'){
-
-            LOGDRONEINFO(status.drone);
-
-            status.msg = 'M';
-
-            writeMsg(fds[DRONE][recwr], &status, 
-                    "[BB] Error asking drone position", file);
-
-            storePreviousPosition(&status.drone);
-
-            readMsg(fds[DRONE][askrd], &status,
-                    "[BB] Error reading drone position", file);
-        }
-        LOGNEWMAP(status);
+        readMsg(fds[DRONE][askrd], &status,
+                "[BB] Error reading drone position", file);
     }
 }
-
 
 void closeAll(){
 
@@ -406,8 +297,28 @@ void quit(){
     }          
 }
 
+void sig_handler(int signo) {
+    if (signo == SIGUSR1) {
+        handler(BLACKBOARD);
+    } else if (signo == SIGTERM) {
+        LOGBBDIED();
+        fclose(file);
+        fclose(logFile);
+        close(fds[DRONE][recwr]);
+        close(fds[DRONE][askrd]);
+        close(fds[INPUT][recwr]);
+        close(fds[INPUT][askrd]);
+        close(fds[OBSTACLE][recwr]);
+        close(fds[OBSTACLE][askrd]);
+        close(fds[TARGET][recwr]);
+        close(fds[TARGET][askrd]);
+        exit(EXIT_SUCCESS);
+    } else if( signo == SIGWINCH){
+        resizeHandler();
+    }
+}
+
 int main(int argc, char *argv[]) {
-    signal(SIGTERM, handleLogFailure); // Register handler for logging errors
 
     // Log file opening
     file = fopen("log/outputbb.txt", "w");
@@ -444,13 +355,23 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    // //FDs print
-    //     for (int i = 0; i < 4; i++) {
-    //     fprintf(file, "Descrittori di file estratti da fd_str[%d]:\n", i);
-    //     for (int j = 0; j < 4; j++) {
-    //         fprintf(file, "fds[%d]: %d\n", j, fds[i][j]);
-    //     }
-    // }
+    if (!targSub.init()){
+
+        //--------------------
+        // LOG
+        //----------------------
+        ;
+    } 
+    targSub.run();
+
+    if (!obstSub.init()){
+
+        //--------------------
+        // LOG
+        //----------------------
+        ;
+    } 
+    obstSub.run();
 
     pid = (int)getpid();
     char dataWrite [80] ;
@@ -472,9 +393,6 @@ int main(int argc, char *argv[]) {
     close(fds[TARGET][askwr]);
     close(fds[TARGET][recrd]);
 
-    // Reading buffer
-    // char data[80];
-    // ssize_t bytesRead;
     fd_set readfds;
     struct timeval tv;
     
@@ -483,7 +401,7 @@ int main(int argc, char *argv[]) {
     tv.tv_usec = 1000;
 
     signal(SIGUSR1, sig_handler);
-    signal(SIGWINCH, resizeHandler);
+    signal(SIGWINCH, sig_handler);
     signal(SIGTERM, sig_handler);
 
     initscr();
@@ -532,7 +450,7 @@ int main(int argc, char *argv[]) {
         token = strtok(NULL, ",");
     }
 
-     // Write the PID values to the output file
+    // Write the PID values to the output file
     for (int i = 0; i < 6; i++) {
         fprintf(file, "pid[%d] = %d\n", i, pids[i]);
         fflush(file);
@@ -547,55 +465,12 @@ int main(int argc, char *argv[]) {
     writeInputMsg(fds[INPUT][recwr], &inputStatus, 
                 "Error sending ack", file);
 
-    if(inputStatus.difficulty == 1){
-        strcpy(difficultyStr,"Easy");
-        status.difficulty = inputStatus.difficulty;
-    } else if(inputStatus.difficulty == 2){
-        strcpy(difficultyStr,"Hard");
-        status.difficulty = inputStatus.difficulty;
-    }
-
-    LOGCONFIG(inputStatus);
 
     mapInit(file);
 
-    // fprintf(file, "incr: %d,%d\n", status.targets.incr,status.obstacles.incr);
-    // fflush(file);
-    elapsedTime = 0;
-
     while (1) {
         
-        elapsedTime += PERIODBB/second;            
-        remainingTime = levelTime + (int)(incTime*status.level/status.difficulty) - (int)elapsedTime;
-
-
-        if (remainingTime < 0){
-            elapsedTime = 0;
-            LOGENDGAME(status, inputStatus);
-
-            int y_center = (nh - 2) / 2;
-            int x_center = nw / 2;
-
-            const char *msg1 = "Time's up! Game over!";
-            const char *msg2 = "Press q to quit";
-
-            mvwprintw(map, y_center, x_center - strlen(msg1) / 2, "%s", msg1);
-            mvwprintw(map, y_center + 1, x_center - strlen(msg2) / 2, "%s", msg2);
-            wrefresh(map);
-
-            quit(); 
-        }
-
-        if(elapsedTime >= resetMap && inputStatus.difficulty == HARD){
-            resetMap += MAPRESET;
-            createNewMap();
-        }
-
-        if (targetsHit >= numTarget + status.targets.incr) {
-                LOGENDLEVEL(status, inputStatus);
-                status.level++;
-
-                if(status.level > 5){
+        if (targetsHit >= status.targets.number) {
 
                 int y_center = (nh - 2) / 2;
                 int x_center = nw / 2;
@@ -608,25 +483,16 @@ int main(int argc, char *argv[]) {
                 wrefresh(map);
 
                 quit();
-            }
-                
-            inputStatus.level = status.level;  
-            status.targets.incr = status.level*status.difficulty*incTarget;
-            status.obstacles.incr = status.level*status.difficulty*incObstacle;
-            msg.targets.incr = status.targets.incr;
-            msg.obstacles.incr = status.obstacles.incr;
+        }
 
-            if(numTarget + status.targets.incr > MAX_TARGET){
-                status.targets.incr = MAX_TARGET - numTarget;
-            }
+        if (targSub.hasNewData() || obstSub.hasNewData()){
 
-            if(numObstacle + status.obstacles.incr > MAX_OBSTACLES){
-                status.obstacles.incr = MAX_OBSTACLES - numObstacle;
+            if(targSub.hasNewData()){
+                status.targets = targSub.getMyTargets();
             }
-            targetsHit = 0;
-            elapsedTime = 0;
-            collision = 0;
-            resetTargetValue(&status);
+            if(obstSub.hasNewData()){
+                status.obstacles = obstSub.getMyObstacles();
+            }
             createNewMap();
         }
 
@@ -689,12 +555,8 @@ int main(int argc, char *argv[]) {
 
                 if(msg.msg == 'R'){
                     if (collision) {
-                        LOGTARGETHIT(status);
-                        LOGCONFIG(inputStatus);
+ 
                         collision = 0;
-
-                        // fprintf(file, "Send new map to [DRONE]\n");
-                        // fflush(file);
                         
                         writeMsg(fds[DRONE][recwr], &status, 
                                 "[BB] Error asking drone position", file);
@@ -826,9 +688,6 @@ int main(int argc, char *argv[]) {
                 
                 writeInputMsg(fds[INPUT][recwr], &inputStatus, 
                                 "[BB] Error asking drone position", file); 
-
-            } else if (selected == fds[OBSTACLE][askrd] || selected == fds[TARGET][askrd]){
-                LOGPROCESSELECTED(OBSTACLE);
             }else{
                 LOGPROCESSELECTED(999);
             }

@@ -34,8 +34,8 @@ Force force = {0, 0};
 Speed speedPrev = {0, 0};
 Speed speed = {0, 0};
 
-Targets targets;
-Obstacles obstacles;
+MyTargets targets;
+MyObstacles obstacles;
 Message status;
 
 
@@ -118,13 +118,13 @@ void drone_force(char* direction) {
 
 }
 
-void obstacle_force(Drone *drone, Obstacles* obstacles) {
+void obstacle_force(Drone *drone, MyObstacles* obstacles) {
     float deltaX, deltaY, distance;
     force_o.x = 0;
     force_o.y = 0;
 
 
-    for (int i = 0; i < numObstacle + status.obstacles.incr; i++) {
+    for (int i = 0; i < status.obstacles.number; i++) {
         deltaX =  obstacles->x[i] - drone->x;
         deltaY =  obstacles->y[i] - drone->y;
 
@@ -143,14 +143,14 @@ void obstacle_force(Drone *drone, Obstacles* obstacles) {
 
 }
 
-void target_force(Drone *drone, Targets* targets) {
+void target_force(Drone *drone, MyTargets* targets) {
     
     float deltaX, deltaY, distance;
     force_t.x = 0;
     force_t.y = 0;
 
-    for (int i = 0; i < numTarget + status.targets.incr; i++) {
-        if(targets->value[i] > 0){    
+    for (int i = 0; i < status.targets.hit; i++) {
+        if(targets->hit[i] != 0){    
             deltaX = targets->x[i] - drone->x;
             deltaY = targets->y[i] - drone->y;
             distance = sqrt(pow(deltaX, 2) + pow(deltaY, 2));
@@ -190,7 +190,7 @@ void sig_handler(int signo) {
     }
 }
 
-void newDrone (Drone* drone, Targets* targets, Obstacles* obstacles, char* directions, char inst){
+void newDrone (Drone* drone, MyTargets* targets, MyObstacles* obstacles, char* directions, char inst){
     target_force(drone, targets);
     obstacle_force(drone, obstacles);
     if(inst == 'I'){
@@ -235,7 +235,6 @@ void mapInit(Drone* drone, Message* status){
 }
 
 int main(int argc, char *argv[]) {
-    signal(SIGTERM, handleLogFailure); // Register handler for logging errors
     
     fdsRead(argc, argv, fds);
 
@@ -273,7 +272,7 @@ int main(int argc, char *argv[]) {
         status.targets.x[i] = 0;
         status.targets.y[i] = 0;
     }
-    targets.incr = 0;
+    targets.number = 10;
 
     for (int i = 0; i < MAX_OBSTACLES; i++) {
         obstacles.x[i] = 0;
@@ -281,19 +280,17 @@ int main(int argc, char *argv[]) {
         status.obstacles.x[i] = 0;
         status.obstacles.y[i] = 0;
     }
-    obstacles.incr = 0;
+    obstacles.number = 10;
 
-    // char data[200];
+    //-----------------------------------
+    //  TODO: LEGGI NUMBERS DA CONFIGFILE
+    //------------------------------------
 
    mapInit(&drone, &status);
-   LOGNEWMAP(status);
 
     while (1)
     {
         status.msg = 'R';
-
-        // fprintf(droneFile, "Sending ready msg");
-        // fflush(droneFile);
 
         writeMsg(fds[askwr], &status, 
             "[DRONE] Ready not sended correctly", droneFile);
@@ -306,8 +303,6 @@ int main(int argc, char *argv[]) {
         switch (status.msg) {
         
             case 'M':
-                LOGNEWMAP(status);
-
                 newDrone(&drone, &status.targets, &status.obstacles, directions, status.msg);
                 droneUpdate(&drone, &speed, &force, &status);
 

@@ -92,11 +92,15 @@ int main(int argc, char *argv[]) {
 
     obstacles.number = 10;
     
+    //-------------------------
+    // LEGGERE NUM DA PARAMFILE
+    //--------------------------
+
     // Create the publisher
-    ObstaclePublisher myPublisher;
+    ObstaclePublisher obstPub;
 
     // Initialize the publisher
-    if (!myPublisher.init()){      
+    if (!obstPub.init()){      
 
         //------------------
         //  TO LOG
@@ -109,7 +113,7 @@ int main(int argc, char *argv[]) {
     while (1) {
 
         createObstacles();
-        myPublisher.publish(obstacles);
+        obstPub.publish(obstacles);
         sleep(PERIODO);
     }
 }

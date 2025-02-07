@@ -27,6 +27,7 @@ private:
     Topic* topic_;
     TypeSupport type_;
     MyTargets received_targets_;  // Variabile che contiene i dati ricevuti
+    bool new_data_;  // Aggiungi questa linea
 
     class SubListener : public DataReaderListener
     {
@@ -39,6 +40,7 @@ private:
         Targets my_message_;
         std::atomic_int samples_;
         TargetSubscriber* parent_;  // Puntatore alla classe principale
+        bool new_data_;  // Aggiungi questa linea
     } listener_;
 
 public:
@@ -47,7 +49,8 @@ public:
 
     bool init();
     void run();
-    MyTargets getMyTargets() const;  // Metodo per accedere ai dati ricevuti
+    MyTargets getMyTargets();  // Rimuovi "const"
+    bool hasNewData() const;  // Aggiungi questa linea
 };
 
 #endif // TARG_SUBSCRIBER_HPP
