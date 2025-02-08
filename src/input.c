@@ -392,22 +392,6 @@ void resizeHandler(){
 
         btnSetUp((int)(((float)nh/2)/2),(int)((((float)nw / 2) - 35)/2));
         drawBtn(99); //to make all the buttons white
-    }else if (mode == MENU && disp == CHOOSEDIFF){
-        getmaxyx(stdscr, nh, nw);  /* get the new screen size */
-        scaleh = ((float)nh / (float)WINDOW_LENGTH);
-        scalew = (float)nw / (float)WINDOW_WIDTH;
-        endwin();
-        initscr();
-        start_color();
-        curs_set(0);
-        noecho();
-        werase(win);
-        werase(control);
-        werase(stdscr);
-        win = newwin(nh, (int)(nw / 2) - 1, 0, 0); 
-        control = newwin(nh, (int)(nw / 2) - 1, 0, (int)(nw / 2) + 1);
-
-        drawDifficulty();
     }
 }
 
@@ -438,13 +422,6 @@ void readConfig() {
     LOGINPUTCONFIGURATION(numbersArray);
 
     cJSON_Delete(json); // pulisci
-}
-
-void saveGame(){
-    LOGAMESAVING();
-    updateLeaderboard();
-    updatePlayersInConfig();
-    LOGAMESAVED();
 }
 
 
@@ -609,7 +586,6 @@ int main(int argc, char *argv[]) {
                     LOGACK(inputStatus);
                 }
                 if(inputStatus.msg == 'S'){                    
-                    saveGame();
 
                     inputStatus.msg = 'R';
 
@@ -649,7 +625,6 @@ int main(int argc, char *argv[]) {
                             "Error reading ack", inputFile);
 
                 if(inputStatus.msg == 'S'){
-                    saveGame();
 
                     inputStatus.msg = 'R';
                     

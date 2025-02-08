@@ -149,7 +149,7 @@ void target_force(Drone *drone, MyTargets* targets) {
     force_t.x = 0;
     force_t.y = 0;
 
-    for (int i = 0; i < status.targets.hit; i++) {
+    for (int i = 0; i < status.targets.number; i++) {
         if(targets->hit[i] != 0){    
             deltaX = targets->x[i] - drone->x;
             deltaY = targets->y[i] - drone->y;
