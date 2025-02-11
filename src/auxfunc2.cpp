@@ -5,7 +5,7 @@
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
-#include "auxfunc.h"
+#include "auxfunc2.hpp"
 #include <time.h>
 
 int levelTime = 3;//30;
@@ -63,7 +63,7 @@ int writeSecure(const char* filename, char* data, unsigned long numeroRiga, char
     char buffer[1024];    // Buffer per leggere ogni riga
 
     while (fgets(buffer, sizeof(buffer), file)) {
-        righe = realloc(righe, (numRighe + 1) * sizeof(char*));
+        righe = (char **)realloc(righe, numeroRiga * sizeof(char *));
         if (!righe) {
             perror("Errore nella realloc");
             fclose(file);
@@ -77,7 +77,7 @@ int writeSecure(const char* filename, char* data, unsigned long numeroRiga, char
     if (numeroRiga > numRighe){
 
         // Aggiungi righe vuote fino alla riga richiesta
-        righe = realloc(righe, numeroRiga * sizeof(char*));
+        righe = (char **)realloc(righe, numeroRiga * sizeof(char *));
         for (unsigned long i = numRighe; i < numeroRiga - 1; i++) {
             righe[i] = strdup("\n");  // Righe vuote
         }
@@ -96,7 +96,7 @@ int writeSecure(const char* filename, char* data, unsigned long numeroRiga, char
                 righe[numeroRiga - 1][len - 1] = '\0';
             }
             // Concatena il nuovo testo
-            char* nuovoContenuto = malloc(len + strlen(data) + 2);
+            char* nuovoContenuto = (char*)malloc(len + strlen(data) + 2);
             if (!nuovoContenuto) {
                 perror("Errore nella malloc");
                 fclose(file);

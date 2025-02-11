@@ -1,7 +1,8 @@
-#ifndef AUXFUNC_H
-#define AUXFUNC_H
+#ifndef AUXFUNC2_HPP
+#define AUXFUNC2_HPP
 
 #include <signal.h>
+#include <stdio.h>
 
 #define DRONE 0        
 #define INPUT 1        

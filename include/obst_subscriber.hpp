@@ -14,7 +14,7 @@
 #include <iostream>
 #include <thread>
 #include <chrono>
-#include "auxfunc.h"
+#include "auxfunc2.hpp"
 
 using namespace eprosima::fastdds::dds;
 

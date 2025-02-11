@@ -16,7 +16,7 @@
 #include <fastdds/dds/topic/TypeSupport.hpp>
 
 #include "obst_publisher.hpp"  // Include the header file
-#include "auxfunc.h"
+#include "auxfunc2.hpp"
 
 using namespace eprosima::fastdds::dds;
 

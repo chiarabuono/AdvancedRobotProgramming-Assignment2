@@ -10,7 +10,7 @@
 #include <fastdds/dds/subscriber/Subscriber.hpp>
 #include <fastdds/dds/topic/TypeSupport.hpp>
 #include "targ_subscriber.hpp"  // Include il file header
-#include "auxfunc.h"
+#include "auxfunc2.hpp"
 
 using namespace eprosima::fastdds::dds;
 

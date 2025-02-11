@@ -11,9 +11,8 @@
 #include <sys/file.h>
 #include <fcntl.h>
 #include <errno.h>
-#include "auxfunc.h"
+#include "auxfunc2.hpp"
 #include <signal.h>
-#include "log.h"
 #include "targ_subscriber.hpp"
 #include "obst_subscriber.hpp"
 
@@ -90,7 +89,6 @@ void mapInit(FILE *file){
     // read initial drone position
     readMsg(fds[DRONE][askrd], &status,
                 "[BB] Error reading drone position\n", file);
-    LOGDRONEINFO(status.drone);
     
     while (!targSub.hasNewData() || !obstSub.hasNewData()){
         usleep(100000);
@@ -103,8 +101,6 @@ void mapInit(FILE *file){
     writeMsg(fds[DRONE][recwr], &status, 
             "[BB] Error sending updated map\n", file);
     
-    LOGDRONEINFO(status.drone);
-
     inputStatus.droneInfo = status.drone;
     inputStatus.msg = 'B';
     writeInputMsg(fds[INPUT][recwr], &inputStatus, 
@@ -155,8 +151,6 @@ void drawMenu(WINDOW* win) {
     // Preparazione delle stringhe
     char score_str[10], diff_str[10];
     sprintf(score_str, "%d", inputStatus.score);
-    sprintf(diff_str, "%s", difficultyStr);
-
 
     // Array con le etichette e i valori corrispondenti
     const char* labels[] = { "Score: ", "Player: "};
@@ -234,8 +228,6 @@ void createNewMap(){
 
     if(msg.msg == 'R'){
 
-        LOGDRONEINFO(status.drone);
-
         status.msg = 'M';
 
         writeMsg(fds[DRONE][recwr], &status, 
@@ -256,10 +248,8 @@ void closeAll(){
             fprintf(logFile,"Process %d is not responding or has terminated\n", pids[j]);
             fflush(logFile);
             }
-            LOGPROCESSDIED(pids[j])
         }
     }
-    LOGBBDIED();
     fclose(file);
     fclose(logFile);
     exit(EXIT_SUCCESS);
@@ -267,7 +257,6 @@ void closeAll(){
 }
 
 void quit(){
-    LOGQUIT();
 
     readInputMsg(fds[INPUT][askrd], &inputMsg, 
                 "[BB] Error reading input", file);
@@ -282,7 +271,6 @@ void quit(){
 
     }
     
-    LOGAMESAVING();
     inputStatus.msg = 'S';
     
     writeInputMsg(fds[INPUT][recwr], &inputStatus, 
@@ -292,7 +280,6 @@ void quit(){
                 "[BB] Error reading input", file);
     
     if(inputMsg.msg == 'R'){    //input ready, all data are saved
-        LOGAMESAVED();
         closeAll();
     }          
 }
@@ -301,7 +288,6 @@ void sig_handler(int signo) {
     if (signo == SIGUSR1) {
         handler(BLACKBOARD);
     } else if (signo == SIGTERM) {
-        LOGBBDIED();
         fclose(file);
         fclose(logFile);
         close(fds[DRONE][recwr]);
@@ -546,12 +532,10 @@ int main(int argc, char *argv[]) {
             detectCollision(&status, &prevDrone);
 
             if (selected == fds[DRONE][askrd]){
-                LOGPROCESSELECTED(DRONE);
          
                 readMsg(fds[DRONE][askrd], &msg,
                                 "[BB] Error reading drone position", file);
 
-                LOGDRONEINFO(status.drone);
 
                 if(msg.msg == 'R'){
                     if (collision) {
@@ -565,7 +549,6 @@ int main(int argc, char *argv[]) {
 
                         readMsg(fds[DRONE][askrd], &status,
                                 "[BB] Error reading drone position", file);
-                        LOGDRONEINFO(status.drone);
 
                     }else{
                         
@@ -583,7 +566,6 @@ int main(int argc, char *argv[]) {
 
                         readMsg(fds[DRONE][askrd], &status,
                                 "[BB] Error reading drone position", file);
-                        LOGDRONEINFO(status.drone);
 
                         // fprintf(file, "Drone updated position: %d,%d\n", status.drone.x, status.drone.y);
                         // fflush(file);
@@ -592,17 +574,13 @@ int main(int argc, char *argv[]) {
                   
             } else if (selected == fds[INPUT][askrd]){
                 
-                LOGPROCESSELECTED(INPUT);
                 
                 readInputMsg(fds[INPUT][askrd], &inputMsg, 
                                 "[BB] Error reading input", file);
 
-                LOGINPUTMESSAGE(inputMsg);
 
                 if(inputMsg.msg == 'P'){
-                    LOGDRONEINFO(status.drone)
                     mode = PAUSE;
-                    LOGSTUATUS(mode);
 
                     inputStatus.msg = 'A';
 
@@ -625,13 +603,11 @@ int main(int argc, char *argv[]) {
                     }
                     if(inputMsg.msg == 'P'){
                         mode = PLAY;
-                        LOGSTUATUS(mode);
                     }else if(inputMsg.msg == 'q'){
                         fprintf(file, "Quit\n");
                         fflush(file);
                         
                         inputStatus.msg = 'S';
-                        LOGAMESAVING();
                         
                         writeInputMsg(fds[INPUT][recwr], &inputStatus, 
                                     "[BB] Error sending ack", file);
@@ -641,14 +617,12 @@ int main(int argc, char *argv[]) {
                         
                         if(inputMsg.msg == 'R'){    //input ready, all data are saved
 
-                            LOGAMESAVED();
                             closeAll();
                         }           
                     }
                     continue;
 
                 }else if (inputMsg.msg == 'q'){
-                    LOGAMESAVING();
                     inputStatus.msg = 'S';
                     writeInputMsg(fds[INPUT][recwr], &inputStatus, 
                                 "[BB] Error sending ack", file);
@@ -658,7 +632,6 @@ int main(int argc, char *argv[]) {
                     
                     if(inputMsg.msg == 'R'){    //input ready, all data are saved
 
-                        LOGAMESAVED();
                         closeAll();
                     }           
                 }
@@ -682,14 +655,12 @@ int main(int argc, char *argv[]) {
 
                 readMsg(fds[DRONE][askrd], &status,
                                 "[BB] Error reading drone position", file);
-                LOGDRONEINFO(status.drone);
 
                 inputStatus.droneInfo = status.drone;
                 
                 writeInputMsg(fds[INPUT][recwr], &inputStatus, 
                                 "[BB] Error asking drone position", file); 
             }else{
-                LOGPROCESSELECTED(999);
             }
         }
         usleep(PERIODBB);
