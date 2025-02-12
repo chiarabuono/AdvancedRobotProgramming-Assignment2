@@ -9,7 +9,7 @@
         {
             "type": "cppbuild",
             "label": "compileBlackboard",
-            "command": "/usr/bin/gcc",
+            "command": "/usr/bin/g++",
             "args": [
                 "-g",
                 "${workspaceFolder}/src/blackBoard.cpp",
@@ -47,12 +47,12 @@
                 "kind": "build",
                 "isDefault": true
             },
-            "detail": "compiler: /usr/bin/gcc"
+            "detail": "compiler: /usr/bin/g++"
         },
         {
             "type": "cppbuild",
             "label": "compileTarget",
-            "command": "/usr/bin/gcc",
+            "command": "/usr/bin/g++",
             "args": [
                 "-g",
                 "${workspaceFolder}/src/target.cpp",
@@ -90,12 +90,12 @@
                 "kind": "build",
                 "isDefault": true
             },
-            "detail": "compiler: /usr/bin/gcc"
+            "detail": "compiler: /usr/bin/g++"
         },
         {
             "type": "cppbuild",
             "label": "compileObstacle",
-            "command": "/usr/bin/gcc",
+            "command": "/usr/bin/g++",
             "args": [
                 "-g",
                 "${workspaceFolder}/src/obstacle.cpp",
@@ -133,7 +133,7 @@
                 "kind": "build",
                 "isDefault": true
             },
-            "detail": "compiler: /usr/bin/gcc"
+            "detail": "compiler: /usr/bin/g++"
         },
         {
             "label": "compositeTask",

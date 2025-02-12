@@ -205,7 +205,6 @@ void writeMsg(int pipeFds, Message* msg, const char* error, FILE* file){
     }  
 }
 
-
 void readMsg(int pipeFds, Message* msgOut, const char* error, FILE* file){   
     if (read(pipeFds, msgOut, sizeof(Message)) == -1){
         fprintf(file, "Error: %s\n", error);
@@ -223,6 +222,7 @@ void writeInputMsg(int pipeFds, inputMessage* msg, const char* error, FILE* file
         exit(EXIT_FAILURE);
     }  
 }
+
 void readInputMsg(int pipeFds, inputMessage* msgOut, const char* error, FILE* file){
     if (read(pipeFds, msgOut, sizeof(inputMessage)) == -1){
         fprintf(file, "Error: %s\n", error);

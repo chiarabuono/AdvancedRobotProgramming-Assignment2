@@ -1,4 +1,4 @@
-#include <ncurses.h>
+#include <ncurses.h> // Invece di <ncurses.h>
 #include <stdio.h>
 #include <string.h>
 #include <fcntl.h>  
@@ -86,6 +86,12 @@ void resizeHandler(){
 
 void mapInit(FILE *file){
 
+
+    fprintf(file,"-------------------------\n");
+    fprintf(file," MAP INITIALIZAION       \n");
+    fprintf(file,"-------------------------\n");
+    fflush(file);
+
     // read initial drone position
     readMsg(fds[DRONE][askrd], &status,
                 "[BB] Error reading drone position\n", file);
@@ -97,6 +103,15 @@ void mapInit(FILE *file){
     status.targets = targSub.getMyTargets();
     status.obstacles = obstSub.getMyObstacles();
 
+    for(int i = 0; i < MAX_TARGET; i++){
+        fprintf(file,"targX,targY = %d, %d\n", status.targets.x[i], status.targets.y[i]);
+        fflush(file);
+    }
+
+    for(int i = 0; i < MAX_OBSTACLES; i++){
+        fprintf(file,"obstX,obstY = %d, %d\n", status.obstacles.x[i], status.obstacles.y[i]);
+        fflush(file);
+    }
     //Update drone position
     writeMsg(fds[DRONE][recwr], &status, 
             "[BB] Error sending updated map\n", file);
@@ -105,6 +120,11 @@ void mapInit(FILE *file){
     inputStatus.msg = 'B';
     writeInputMsg(fds[INPUT][recwr], &inputStatus, 
                 "Error sending ack", file);
+
+    fprintf(file,"-------------------------\n");
+    fprintf(file,"MAP INITIALIZAION FINISHED\n");
+    fprintf(file,"-------------------------\n");
+    fflush(file);
 }
 
 void drawDrone(WINDOW * win){
@@ -343,21 +363,25 @@ int main(int argc, char *argv[]) {
 
     if (!targSub.init()){
 
+        fprintf(file,"Problem targ");
+        fflush(file);
         //--------------------
         // LOG
         //----------------------
         ;
     } 
-    targSub.run();
+    
 
     if (!obstSub.init()){
 
+        fprintf(file,"Problem Obst");
+        fflush(file);
         //--------------------
         // LOG
         //----------------------
         ;
     } 
-    obstSub.run();
+    
 
     pid = (int)getpid();
     char dataWrite [80] ;
@@ -456,22 +480,31 @@ int main(int argc, char *argv[]) {
 
     while (1) {
         
+        obstSub.run();
+        targSub.run();
+        
         if (targetsHit >= status.targets.number) {
 
-                int y_center = (nh - 2) / 2;
-                int x_center = nw / 2;
+            fprintf(file, "targets hit");
+            fflush(file);
 
-                const char *msg1 = "Congratulations! You Won!";
-                const char *msg2 = "Press q to quit";
+            int y_center = (nh - 2) / 2;
+            int x_center = nw / 2;
 
-                mvwprintw(map, y_center, x_center - strlen(msg1) / 2, "%s", msg1);
-                mvwprintw(map, y_center + 1, x_center - strlen(msg2) / 2, "%s", msg2);
-                wrefresh(map);
+            const char *msg1 = "Congratulations! You Won!";
+            const char *msg2 = "Press q to quit";
 
-                quit();
+            mvwprintw(map, y_center, x_center - strlen(msg1) / 2, "%s", msg1);
+            mvwprintw(map, y_center + 1, x_center - strlen(msg2) / 2, "%s", msg2);
+            wrefresh(map);
+
+            quit();
         }
 
         if (targSub.hasNewData() || obstSub.hasNewData()){
+
+            fprintf(file, "new data");
+            fflush(file);
 
             if(targSub.hasNewData()){
                 status.targets = targSub.getMyTargets();
@@ -482,7 +515,10 @@ int main(int argc, char *argv[]) {
             createNewMap();
         }
 
-        // Update the main window
+        fprintf(file, "ready to print");
+        fflush(file);
+
+        // // Update the main window
         werase(win);
         werase(map);
         box(map, 0, 0);
@@ -494,6 +530,9 @@ int main(int argc, char *argv[]) {
         wrefresh(win);
         wrefresh(map);
         
+        fprintf(file, "printed");
+        fflush(file);
+
         //FDs setting for select
         FD_ZERO(&readfds);
         FD_SET(fds[DRONE][askrd], &readfds);

@@ -232,6 +232,16 @@ void mapInit(Drone* drone, Message* status){
     
     readMsg(fds[recrd], status,
             "[DRONE] Error receiving map from BB", droneFile);
+    
+    for(int i = 0; i < MAX_TARGET; i++){
+        fprintf(droneFile,"targX,targY = %d, %d\n", status->targets.x[i], status->targets.y[i]);
+        fflush(droneFile);
+    }
+
+    for(int i = 0; i < MAX_OBSTACLES; i++){
+        fprintf(droneFile,"obstX,obstY = %d, %d\n", status->obstacles.x[i], status->obstacles.y[i]);
+        fflush(droneFile);
+    }
 }
 
 int main(int argc, char *argv[]) {
@@ -299,6 +309,16 @@ int main(int argc, char *argv[]) {
 
         readMsg(fds[recrd], &status,
             "[DRONE] Error receiving map from BB", droneFile);
+        
+        for(int i = 0; i < MAX_TARGET; i++){
+            fprintf(droneFile,"targX,targY = %d, %d\n", status.targets.x[i], status.targets.y[i]);
+            fflush(droneFile);
+        }
+    
+        for(int i = 0; i < MAX_OBSTACLES; i++){
+            fprintf(droneFile,"obstX,obstY = %d, %d\n", status.obstacles.x[i], status.obstacles.y[i]);
+            fflush(droneFile);
+        }
 
         switch (status.msg) {
         

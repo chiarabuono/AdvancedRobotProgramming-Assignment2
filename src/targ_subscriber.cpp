@@ -85,10 +85,7 @@ bool TargetSubscriber::init()
 }
 
 void TargetSubscriber::run(){
-    while(true){
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
-    }
 }
 
 // Implementazione del metodo per ottenere i dati ricevuti
@@ -112,15 +109,15 @@ void TargetSubscriber::SubListener::on_subscription_matched(DataReader* reader, 
 {
     if (info.current_count_change == 1)
     {
-        std::cout << "Subscriber matched." << std::endl;
+        // std::cout << "Target Subscriber matched." << std::endl;
     }
     else if (info.current_count_change == -1)
     {
-        std::cout << "Subscriber unmatched." << std::endl;
+        // std::cout << "Target Subscriber unmatched." << std::endl;
     }
     else
     {
-        std::cout << info.current_count_change << " is not a valid value for SubscriptionMatchedStatus current count change." << std::endl;
+        // std::cout << info.current_count_change << " is not a valid value for SubscriptionMatchedStatus current count change." << std::endl;
     }
 }
 
