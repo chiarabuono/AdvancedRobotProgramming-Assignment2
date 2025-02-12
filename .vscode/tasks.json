@@ -19,7 +19,7 @@
                 "${workspaceFolder}/src/targ_subscriber.cpp",
                 "${workspaceFolder}/src/auxfunc2.cpp",  // Aggiunta di auxfunc.c
                 "-o",
-                "${workspaceFolder}/bin/blackboard",
+                "${workspaceFolder}/bin/blackBoard",
                 "${workspaceFolder}/src/Generated/ObstaclesPubSubTypes.cxx",
                 "${workspaceFolder}/src/Generated/ObstaclesTypeObjectSupport.cxx",
                 "${workspaceFolder}/src/Generated/TargetsPubSubTypes.cxx",
@@ -47,13 +47,98 @@
                 "kind": "build",
                 "isDefault": true
             },
-            "dependsOn": ["delete old binary"],
+            "detail": "compiler: /usr/bin/gcc"
+        },
+        {
+            "type": "cppbuild",
+            "label": "compileTarget",
+            "command": "/usr/bin/gcc",
+            "args": [
+                "-g",
+                "${workspaceFolder}/src/target.cpp",
+                "${workspaceFolder}/src/obst_publisher.cpp",
+                "${workspaceFolder}/src/obst_subscriber.cpp",
+                "${workspaceFolder}/src/targ_publisher.cpp",
+                "${workspaceFolder}/src/targ_subscriber.cpp",
+                "${workspaceFolder}/src/auxfunc2.cpp",  // Aggiunta di auxfunc.c
+                "-o",
+                "${workspaceFolder}/bin/target",
+                "${workspaceFolder}/src/Generated/ObstaclesPubSubTypes.cxx",
+                "${workspaceFolder}/src/Generated/ObstaclesTypeObjectSupport.cxx",
+                "${workspaceFolder}/src/Generated/TargetsPubSubTypes.cxx",
+                "${workspaceFolder}/src/Generated/TargetsTypeObjectSupport.cxx",
+                "-I${workspaceFolder}/src",
+                "-I${workspaceFolder}/include",
+                "-I/usr/include/fastdds",
+                "-I/usr/include/fastcdr",
+                "-std=c++11",  // Solo per i file .cpp
+                "-lstdc++",
+                "-lncurses",
+                "-ltinfo",
+                "-lm",
+                "-lcjson",
+                "-lfastcdr",
+                "-lfastdds"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/src"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "detail": "compiler: /usr/bin/gcc"
+        },
+        {
+            "type": "cppbuild",
+            "label": "compileObstacle",
+            "command": "/usr/bin/gcc",
+            "args": [
+                "-g",
+                "${workspaceFolder}/src/obstacle.cpp",
+                "${workspaceFolder}/src/obst_publisher.cpp",
+                "${workspaceFolder}/src/obst_subscriber.cpp",
+                "${workspaceFolder}/src/targ_publisher.cpp",
+                "${workspaceFolder}/src/targ_subscriber.cpp",
+                "${workspaceFolder}/src/auxfunc2.cpp",  // Aggiunta di auxfunc.c
+                "-o",
+                "${workspaceFolder}/bin/obstacle",
+                "${workspaceFolder}/src/Generated/ObstaclesPubSubTypes.cxx",
+                "${workspaceFolder}/src/Generated/ObstaclesTypeObjectSupport.cxx",
+                "${workspaceFolder}/src/Generated/TargetsPubSubTypes.cxx",
+                "${workspaceFolder}/src/Generated/TargetsTypeObjectSupport.cxx",
+                "-I${workspaceFolder}/src",
+                "-I${workspaceFolder}/include",
+                "-I/usr/include/fastdds",
+                "-I/usr/include/fastcdr",
+                "-std=c++11",  // Solo per i file .cpp
+                "-lstdc++",
+                "-lncurses",
+                "-ltinfo",
+                "-lm",
+                "-lcjson",
+                "-lfastcdr",
+                "-lfastdds"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/src"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
             "detail": "compiler: /usr/bin/gcc"
         },
         {
             "label": "compositeTask",
             "type": "shell",
-            "dependsOn": ["make", "compileBlackboard"],
+            "dependsOn": ["make", "compileBlackboard", "compileTarget", "compileObstacle"],
             "command": "echo All tasks completed",
             "group": "build"
         }

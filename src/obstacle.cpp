@@ -7,7 +7,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
-#include "auxfunc.h"
+#include "auxfunc2.hpp"
 #include <signal.h>
 #include <math.h>
 #include "obstacle.hpp"
@@ -23,7 +23,7 @@
 #define PERIODO 3
 
 MyObstacles obstacles;
-FILE *obstFile = NULL;
+FILE *obstFile = nullptr;
 
 int pid;
 int fds[4];

@@ -1,11 +1,11 @@
-#ifndef TARGET_H
-#define TARGET_H
+#ifndef TARGET_HPP
+#define TARGET_HPP
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include "auxfunc.h"
+#include "auxfunc2.hpp"
 
 // Macro di configurazione
 #define MAX_LINE_LENGTH 100

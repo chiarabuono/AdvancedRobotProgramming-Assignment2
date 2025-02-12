@@ -3,7 +3,7 @@
 #include <fcntl.h>  
 #include <stdlib.h>
 #include <unistd.h>
-#include "auxfunc.h"
+#include "auxfunc2.hpp"
 #include <signal.h>
 #include "target.hpp"
 #include "targ_publisher.hpp"

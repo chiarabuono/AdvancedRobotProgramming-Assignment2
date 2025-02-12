@@ -1,11 +1,11 @@
-#ifndef OBSTACLE_H
-#define OBSTACLE_H
+#ifndef OBSTACLE_HPP
+#define OBSTACLE_HPP
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include "auxfunc.h"
+#include "auxfunc2.hpp"
 
 // Macro di configurazione
 #define MAX_LINE_LENGTH 100
