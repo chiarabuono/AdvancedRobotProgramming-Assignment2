@@ -113,13 +113,13 @@ int main(int argc, char *argv[]) {
 
     while (1) {
 
-        sleep(PERIODO);
         createObstacles();
         for(int i = 0; i < MAX_OBSTACLES; i++){
             fprintf(obstFile,"obstX,obstY = %d, %d\n", obstacles.x[i], obstacles.y[i]);
             fflush(obstFile);
         }
         obstPub.publish(obstacles);
+        sleep(PERIODO);
     }
 }
 

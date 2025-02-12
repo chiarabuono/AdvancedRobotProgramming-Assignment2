@@ -132,11 +132,12 @@ void drawDrone(WINDOW * win){
     int col = (int)(status.drone.x * scalew);
     wattron(win, A_BOLD); // Attiva il grassetto
     wattron(win, COLOR_PAIR(1));   
-    mvwprintw(win, row - 1, col, "|");     
-    mvwprintw(win, row, col + 1, "--");
-    mvwprintw(win, row, col, "+");
-    mvwprintw(win, row + 1, col, "|");     
-    mvwprintw(win, row , col -2, "--");
+    std::string m = "+";
+    mvwprintw(win, row - 1, col, "%s", "|");     
+    mvwprintw(win, row, col + 1, "%s", "--");
+    mvwprintw(win, row, col, "%s", "+");
+    mvwprintw(win, row + 1, col, "%s", "|");     
+    mvwprintw(win, row , col -2, "%s", "--");
     wattroff(win, COLOR_PAIR(1)); 
     wattroff(win, A_BOLD); // Attiva il grassetto 
 }
@@ -145,7 +146,7 @@ void drawObstacle(WINDOW * win){
     wattron(win, A_BOLD); // Attiva il grassetto
     wattron(win, COLOR_PAIR(2)); 
     for(int i = 0; i < status.obstacles.number; i++){
-        mvwprintw(win, (int)(status.obstacles.y[i]*scaleh), (int)(status.obstacles.x[i]*scalew), "0");
+        mvwprintw(win, (int)(status.obstacles.y[i]*scaleh), (int)(status.obstacles.x[i]*scalew), "%s", "0");
     }
     wattroff(win, COLOR_PAIR(2)); 
     wattroff(win, A_BOLD); // Attiva il grassetto 
@@ -154,35 +155,38 @@ void drawObstacle(WINDOW * win){
 void drawTarget(WINDOW * win) {
     wattron(win, A_BOLD); // Attiva il grassetto
     wattron(win, COLOR_PAIR(3)); 
-    for(int i = 0; i < status.targets.number; i++){
-        if (status.targets.hit[i] == 0) continue;
-        char val_str[2];
-        sprintf(val_str, "%d", i + 1); // Converte il valore in stringa
-        mvwprintw(win, (int)(status.targets.y[i] * scaleh), (int)(status.targets.x[i] * scalew), "%s", val_str); // Usa un formato esplicito
+    for (int i = 0; i < status.targets.number; i++) {
+        if (status.targets.hit[i] == 1) continue;
+        std::string val_str = std::to_string(i + 1); // Converte il valore in stringa
+        mvwprintw(win, (int)(status.targets.y[i] * scaleh), (int)(status.targets.x[i] * scalew), "%s", val_str.c_str()); // Usa un formato esplicito
     } 
     wattroff(win, COLOR_PAIR(3)); 
     wattroff(win, A_BOLD); // Disattiva il grassetto
 }
 
-void drawMenu(WINDOW* win) {
 
+void drawMenu(WINDOW* win) {
     wattron(win, A_BOLD); // Attiva il grassetto
 
     // Preparazione delle stringhe
-    char score_str[10], diff_str[10];
+    char score_str[10];
     sprintf(score_str, "%d", inputStatus.score);
 
     // Array con le etichette e i valori corrispondenti
-    const char* labels[] = { "Score: ", "Player: "};
-    const char* values[] = { score_str, inputStatus.name};
+    const char* labels[] = { "Score: ", "Player: " };
+    const char* values[] = { score_str, inputStatus.name };
 
-    int num_elements = 5; // Numero di elementi nel menu
+    int num_elements = 2; // Numero di elementi nel menu
 
     // Calcola la lunghezza totale occupata dalle stringhe
     int total_length = 0;
     for (int i = 0; i < num_elements; i++) {
         total_length += strlen(labels[i]) + strlen(values[i]);
     }
+
+    // Ottieni la larghezza della finestra
+    int nw;
+    getmaxyx(win, nw, nw); // Ignora l'altezza, usa solo la larghezza
 
     // Calcola lo spazio rimanente e lo spazio tra gli elementi
     int remaining_space = nw - total_length; // Spazio non occupato dalle stringhe
@@ -197,10 +201,12 @@ void drawMenu(WINDOW* win) {
         // Aggiorna la posizione corrente
         current_position += strlen(labels[i]) + strlen(values[i]) + spacing;
     }
+
     wattroff(win, A_BOLD); // Disattiva il grassetto
     // Aggiorna la finestra per mostrare i cambiamenti
     wrefresh(win);
 }
+
 
 int randomSelect(int n) {
     unsigned int random_number;

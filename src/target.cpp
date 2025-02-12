@@ -106,12 +106,12 @@ int main(int argc, char *argv[]) {
 
     while (1) {
 
-        sleep(PERIODT);
         createTargets();
         for(int i = 0; i < MAX_TARGET; i++){
             fprintf(targFile,"targX,targY = %d, %d\n", targets.x[i], targets.y[i]);
             fflush(targFile);
         }
         targPub.publish(targets);
+        sleep(PERIODT);
     }
 }
