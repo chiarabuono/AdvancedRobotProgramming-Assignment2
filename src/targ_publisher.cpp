@@ -96,7 +96,6 @@ bool TargetPublisher::publish(MyTargets myTargets){
         my_message_.targets_number(myTargets.number);
 
         writer_->write(&my_message_);
-        LOGPUBLISHNEWTARGET(my_message_);
 
         return true;
     }
@@ -119,5 +118,4 @@ void TargetPublisher::PubListener::on_publication_matched(DataWriter* writer, co
     } else if (info.current_count_change == -1) {
         matched_ = info.total_count;
     }
-    LOGPUBLISHERMATCHING(info.current_count_change);
 }

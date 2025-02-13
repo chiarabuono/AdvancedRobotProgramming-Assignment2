@@ -98,7 +98,7 @@ TargetSubscriber::SubListener::~SubListener()
 }
 
 void TargetSubscriber::SubListener::on_subscription_matched(DataReader* reader, const SubscriptionMatchedStatus& info) {
-    LOGSUBSCRIPTION(info.current_count_change);
+
 }
 
 void convertTargetsToMyTargets(const Targets& targets, MyTargets& myTargets) {

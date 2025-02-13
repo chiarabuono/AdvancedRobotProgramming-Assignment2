@@ -108,9 +108,6 @@ bool ObstaclePublisher::publish(MyObstacles myObstacles){
         return true;
     }
     return false;
-    //--------------------
-    // TO LOG
-    //--------------------
 }
 
 // Implement the listener class methods
@@ -125,18 +122,11 @@ ObstaclePublisher::PubListener::~PubListener()
 
 void ObstaclePublisher::PubListener::on_publication_matched(DataWriter* writer, const PublicationMatchedStatus& info)
 {
-    if (info.current_count_change == 1)
-    {
+    if (info.current_count_change == 1) {
         matched_ = info.total_count;
-        // std::cout << "Obstacle Publisher matched." << std::endl;
-    }
-    else if (info.current_count_change == -1)
-    {
+    } else if (info.current_count_change == -1) {
         matched_ = info.total_count;
-        // std::cout << "Obstacle Publisher unmatched." << std::endl;
+
     }
-    else
-    {
-        // std::cout << info.current_count_change << " is not a valid value for PublicationMatchedStatus current count change." << std::endl;
-    }
+    else{}
 }
