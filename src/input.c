@@ -22,7 +22,7 @@ int btnValues[9] ={0};
 // char *default_text[9] = {"L-UP", "UP", "R-UP", "LEFT", "CENTER", "RIGHT", "L-DOWN", "DOWN", "R-DOWN"};
 // char *menu_text[9] = {"W", "E", "R", "S", "D", "F", "X", "C", "V"};
 char *droneInfoText[6] = {"Position x: ", "Position y: ", "Force x: ", "Force y: ", "Speed x ", "Speed y: "};
-char *menuBtn[2] = {"Press P to pause", "Press Q to save & quit"};
+char *menuBtn[2] = {"Press P to pause", "Press Q to quit"};
 
 int pid;
 int fds[4]; 
@@ -230,7 +230,7 @@ void pauseMenu(){
     werase(stdscr);
     box(stdscr, 0, 0);
     const char *prompt = "Press P to play";
-    const char *prompt2 = "Press Q to save & quit";
+    const char *prompt2 = "Press Q to quit";
     int prompt_row = nh / 2 - 2; // Riga leggermente sopra il centro
 
     mvwprintw(stdscr, prompt_row, (nw - strlen(prompt)) / 2, "%s", prompt);

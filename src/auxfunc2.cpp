@@ -253,11 +253,10 @@ void fdsRead (int argc, char* argv[], int* fds){
     }
 }
 
-int writePid(char* file, char mode, int row, char id){
-
+int writePid(const char* file, char mode, int row, char id) {
     int pid = (int)getpid();
     char dataWrite[80];
-    snprintf(dataWrite, sizeof(dataWrite), "%c%d,",id, pid);
+    snprintf(dataWrite, sizeof(dataWrite), "%c%d,", id, pid);
 
     if (writeSecure(file, dataWrite, row, mode) == -1) {
         perror("Error in writing in passParam.txt");
@@ -266,6 +265,7 @@ int writePid(char* file, char mode, int row, char id){
 
     return pid;
 }
+
 
 void printInputMessageToFile(FILE *file, inputMessage* msg) {
     fprintf(file, "\n");

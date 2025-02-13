@@ -279,8 +279,10 @@ int main(int argc, char *argv[]) {
     for (int i = 0; i < MAX_TARGET; i++) {
         targets.x[i] = 0;
         targets.y[i] = 0;
+        targets.hit[i] = 0;
         status.targets.x[i] = 0;
         status.targets.y[i] = 0;
+        status.targets.hit[i] = 0;
     }
     targets.number = 10;
 

@@ -12,32 +12,25 @@
 #include <math.h>
 #include "obstacle.hpp"
 #include "obst_publisher.hpp"
+#include "cjson/cJSON.h"
 
-
-// process that ask or receive
-#define askwr 1
-#define askrd 0
-#define recwr 3
-#define recrd 2
 
 // management target
 #define PERIODO 3
 
-MyObstacles obstacles;
+FILE *settingsfile = NULL;
 FILE *obstFile = nullptr;
 
+MyObstacles obstacles;
+
 int pid;
-int fds[4];
 
 void sig_handler(int signo) {
-    if (signo == SIGUSR1)
-    {
+    if (signo == SIGUSR1){
         handler(OBSTACLE);
-    }else if(signo == SIGTERM){
-        LOGPROCESSDIED() 
+    } else if(signo == SIGTERM){
+        LOGPROCESSDIED();
         fclose(obstFile);
-        close(fds[recrd]);
-        close(fds[askwr]);
         exit(EXIT_SUCCESS);
     }
 }
@@ -54,7 +47,6 @@ void createObstacles() {
     int x_pos, y_pos;
 
     for (int i = 0; i < obstacles.number; i++){
-    
         do {
             x_pos = rand() % (WINDOW_LENGTH - 1);
             y_pos = rand() % (WINDOW_WIDTH - 1);
@@ -65,9 +57,32 @@ void createObstacles() {
     }
 }
 
+void readConfig() {
+
+    int len = fread(jsonBuffer, 1, sizeof(jsonBuffer), settingsfile); 
+    if (len <= 0) {
+        perror("Error reading the file");
+        return;
+    }
+    fclose(settingsfile);
+
+    cJSON *json = cJSON_Parse(jsonBuffer); // parse the text to json object
+
+    if (json == NULL) {
+        perror("Error parsing the file");
+    }
+
+
+    // Aggiorna le variabili globali
+    obstacles.number = cJSON_GetObjectItemCaseSensitive(json, "ObstacleNumber")->valueint;
+
+    // Per array
+    cJSON *numbersArray = cJSON_GetObjectItemCaseSensitive(json, "DefaultBTN"); // questo è un array
+
+    cJSON_Delete(json); // pulisci
+}
+
 int main(int argc, char *argv[]) {
-   
-    fdsRead(argc, argv, fds);
 
     // Opening log file
     obstFile = fopen("log/obstacle.log", "a");
@@ -78,24 +93,23 @@ int main(int argc, char *argv[]) {
 
     pid = writePid("log/passParam.txt", 'a', 1, 'o');
 
-    // Closing unused pipes heads to avoid deadlock
-    close(fds[askrd]);
-    close(fds[recwr]);
-
     //Defining signals
     signal(SIGUSR1, sig_handler);
     signal(SIGTERM, sig_handler);
+
+    //Open config file
+    settingsfile = fopen("appsettings.json", "r");
+    if (settingsfile == NULL) {
+        perror("Error opening the file");
+        return EXIT_FAILURE;//1
+    }
+
+    readConfig();
 
     for( int i = 0; i < MAX_OBSTACLES; i++){
         obstacles.x[i] = 0;
         obstacles.y[i] = 0;
     }
-
-    obstacles.number = 10;
-    
-    //-------------------------
-    // LEGGERE NUM DA PARAMFILE
-    //--------------------------
 
     // Create the publisher
     ObstaclePublisher obstPub;

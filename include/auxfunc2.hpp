@@ -107,7 +107,7 @@ void readMsg(int pipeFds, Message* msgOut, const char* error, FILE* file);
 void writeInputMsg(int pipeFds, inputMessage* msg, const char* error, FILE* file);
 void readInputMsg(int pipeFds, inputMessage* msgOut, const char* error, FILE* file);
 void fdsRead (int argc, char* argv[], int* fds);
-int writePid(char* file, char mode, int row, char id);
+int writePid(const char* file, char mode, int row, char id);
 void printInputMessageToFile(FILE *file, inputMessage* msg);
 void printMessageToFile(FILE *file, Message* msg);
 void msgInit(Message* status);

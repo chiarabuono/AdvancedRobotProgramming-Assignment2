@@ -15,6 +15,7 @@
 #include <signal.h>
 #include "targ_subscriber.hpp"
 #include "obst_subscriber.hpp"
+#include "cjson/cJSON.h"
 
 // process to whom that asked or received
 #define askwr 1
@@ -46,7 +47,7 @@ WINDOW * map;
 
 FILE *file = NULL;
 FILE *logFile = NULL;
-
+FILE *settingsfile = NULL;
 
 Drone_bb prevDrone = {0, 0, 0, 0, 0, 0};
 
@@ -62,8 +63,6 @@ int pids[6] = {0};  // Initialize PIDs to 0
 
 int collision = 0;
 int targetsHit = 0;
-
-
 
 void storePreviousPosition(Drone_bb *drone) {
 
@@ -156,7 +155,7 @@ void drawTarget(WINDOW * win) {
     wattron(win, A_BOLD); // Attiva il grassetto
     wattron(win, COLOR_PAIR(3)); 
     for (int i = 0; i < status.targets.number; i++) {
-        if (status.targets.hit[i] == 1) continue;
+        if (status.targets.hit[i]) continue;
         std::string val_str = std::to_string(i + 1); // Converte il valore in stringa
         mvwprintw(win, (int)(status.targets.y[i] * scaleh), (int)(status.targets.x[i] * scalew), "%s", val_str.c_str()); // Usa un formato esplicito
     } 
@@ -232,11 +231,11 @@ void detectCollision(Message* status, Drone_bb * prev) {
     
     for (int i = 0; i < status->targets.number; i++) {
         
-        if (status->targets.hit[i] && (((prev->x <= status->targets.x[i] + 2 && status->targets.x[i] - 2 <= status->drone.x)  &&
+        if (!status->targets.hit[i] && (((prev->x <= status->targets.x[i] + 2 && status->targets.x[i] - 2 <= status->drone.x)  &&
             (prev->y <= status->targets.y[i] + 2 && status->targets.y[i]- 2 <= status->drone.y) )||
             ((prev->x >= status->targets.x[i] - 2 && status->targets.x[i] >= status->drone.x + 2) &&
             (prev->y >= status->targets.y[i] - 2 && status->targets.y[i] >= status->drone.y + 2) ))){
-                inputStatus.score += i;
+                inputStatus.score += i + 1;
                 status->targets.hit[i] = 1;
                 collision = 1;
                 targetsHit++;   
@@ -276,6 +275,8 @@ void closeAll(){
             }
         }
     }
+    fprintf(logFile,"closing blackboard\n");
+    fflush(logFile);
     fclose(file);
     fclose(logFile);
     exit(EXIT_SUCCESS);
@@ -328,6 +329,28 @@ void sig_handler(int signo) {
     } else if( signo == SIGWINCH){
         resizeHandler();
     }
+}
+
+void readConfig() {
+
+    int len = fread(jsonBuffer, 1, sizeof(jsonBuffer), settingsfile); 
+    if (len <= 0) {
+        perror("Error reading the file");
+        return;
+    }
+    fclose(settingsfile);
+
+    cJSON *json = cJSON_Parse(jsonBuffer); // parse the text to json object
+
+    if (json == NULL) {
+        perror("Error parsing the file");
+    }
+
+    // Aggiorna le variabili globali
+    status.targets.number = cJSON_GetObjectItemCaseSensitive(json, "TargetNumber")->valueint;
+    status.obstacles.number = cJSON_GetObjectItemCaseSensitive(json, "ObstacleNumber")->valueint;
+
+    cJSON_Delete(json); // pulisci
 }
 
 int main(int argc, char *argv[]) {
@@ -412,6 +435,12 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
     
+    //Open config file
+    settingsfile = fopen("appsettings.json", "r");
+    if (settingsfile == NULL) {
+        perror("Error opening the file");
+        return EXIT_FAILURE;//1
+    }
 
     // closing the unused fds to avoid deadlock
     close(fds[DRONE][askwr]);
@@ -432,6 +461,7 @@ int main(int argc, char *argv[]) {
 
     signal(SIGUSR1, sig_handler);
     signal(SIGWINCH, sig_handler);
+    
     signal(SIGTERM, sig_handler);
 
     initscr();
@@ -495,6 +525,7 @@ int main(int argc, char *argv[]) {
     writeInputMsg(fds[INPUT][recwr], &inputStatus, 
                 "Error sending ack", file);
 
+    readConfig();
 
     mapInit(file);
 
@@ -526,17 +557,21 @@ int main(int argc, char *argv[]) {
             fprintf(file, "new data");
             fflush(file);
 
+            MyTargets auxTarg;
             if(targSub.hasNewData()){
-                status.targets = targSub.getMyTargets();
+                auxTarg = targSub.getMyTargets();
             }
+
+            for(int i = 0; i < status.targets.number; i++){
+                status.targets.x[i] = auxTarg.x[i];
+                status.targets.y[i] = auxTarg.y[i];
+            }
+
             if(obstSub.hasNewData()){
                 status.obstacles = obstSub.getMyObstacles();
             }
             createNewMap();
         }
-
-        fprintf(file, "ready to print");
-        fflush(file);
 
         // // Update the main window
         werase(win);
@@ -549,9 +584,6 @@ int main(int argc, char *argv[]) {
         drawTarget(map);
         wrefresh(win);
         wrefresh(map);
-        
-        fprintf(file, "printed");
-        fflush(file);
 
         //FDs setting for select
         FD_ZERO(&readfds);
