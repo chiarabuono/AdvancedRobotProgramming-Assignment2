@@ -345,26 +345,40 @@ int main(int argc, char *argv[]) {
         return 1;
     }
     
-    if (argc < 5) {
+    if (argc < 3) {
         fprintf(stderr, "Uso: %s <fd_str[0]> <fd_str[1]> <fd_str[2]> <fd_str[3]>\n", argv[0]);
         exit(1);
     }
 
-    for (int i = 0; i < 4; i++) {
-        char *fd_str = argv[i + 1];
+   
+    char *fd_str0 = argv[1];
 
-        int index = 0;
+    int index0 = 0;
 
-        // Tokenization each value and discard ","
-        char *token = strtok(fd_str, ",");
-        token = strtok(NULL, ",");
+    // Tokenizzazione di ogni valore e scarto della ","
+    char *token0 = strtok(fd_str0, ",");
+    token0 = strtok(NULL, ",");
 
-        // FDs ectraction
-        while (token != NULL && index < 4) {
-            fds[i][index] = atoi(token);
-            index++;
-            token = strtok(NULL, ",");
-        }
+    // Estrazione dei file descriptor
+    while (token0 != NULL && index0 < 4) {
+        fds[INPUT][index0] = atoi(token0);
+        index0++;
+        token0 = strtok(NULL, ",");
+    }
+
+    char *fd_str2 = argv[2];
+
+    int index2 = 0;
+
+    // Tokenizzazione di ogni valore e scarto della ","
+    char *token2 = strtok(fd_str2, ",");
+    token2 = strtok(NULL, ",");
+
+    // Estrazione dei file descriptor
+    while (token2 != NULL && index2 < 4) {
+        fds[DRONE][index2] = atoi(token2);
+        index2++;
+        token2 = strtok(NULL, ",");
     }
 
     if (!targSub.init()){

@@ -18,11 +18,17 @@
 #define PROCESSNUM 4
 #define PIPEXPROCESS 2
 
+#define DRONE 0        
+#define INPUT 1        
+#define OBSTACLE 2        
+#define TARGET 3 
+#define BLACKBOARD 4
+#define WATCHDOG 5
+
 int main() {
 
-    // Pipes creation 
-
-    int pipes [PROCESSNUM][PIPEXPROCESS][2];
+    // Creazione delle pipe
+    int pipes[PROCESSNUM][PIPEXPROCESS][2];
 
     for (int i = 0; i < PROCESSNUM; i++) {
         for (int j = 0; j < 2; j++){
@@ -33,20 +39,19 @@ int main() {
         }
     }
 
-    
     char fd_str[PROCESSNUM][50];        
     char test[15];                      
     
-    // inizialized to 0 to concat the fds
-    for(int i = 0; i < PROCESSNUM; i++){    
+    // Inizializzare fd_str a 0 per concatenare i file descriptor
+    for (int i = 0; i < PROCESSNUM; i++) {    
         sprintf(fd_str[i], "%d", 0);
         strcat(fd_str[i], ",");
     }
 
-    // filling fd_str with the values in pipes (separated by commas)
-    for(int i = 0; i < PROCESSNUM; i++){
-        for(int j = 0; j < PIPEXPROCESS; j++){
-            for(int k = 0; k < 2; k++){
+    // Riempimento di fd_str con i valori nelle pipe (separati da virgole)
+    for (int i = 0; i < PROCESSNUM; i++) {
+        for (int j = 0; j < PIPEXPROCESS; j++) {
+            for (int k = 0; k < 2; k++) {
                 sprintf(test, "%d", pipes[i][j][k]);
                 strcat(fd_str[i], test);
                 strcat(fd_str[i], ",");
@@ -60,74 +65,51 @@ int main() {
         exit(1);
     }
 
-    
+    pid_t pids[PROCESSNUM];   
 
-    pid_t pids[PROCESSNUM];           
+    int choice;
+    printf("Inserisci 1 per il Master, 2 per lo slave: ");
+    fflush(stdout);
+    scanf("%d", &choice);
 
-    for (int i = 0; i < PROCESSNUM; i++){
-        pids[i] = fork();
-
-        if (pids[i] < 0) {
-            perror("Errore nella fork");
-            exit(1);
-        } 
-
-        else if (pids[i] == 0) {
-            char *args[] = { NULL, fd_str[i], NULL };
-
-            switch (i) {
-                case DRONE:{
-                        args[0] = "./bin/drone";
-                        if (execvp(args[0], args) == -1) {
-                            perror("Errore in execvp per drone");
-                            exit(1);
-                        }
-                    }
-                    break;
-                case INPUT:{
-                        char *argi[] = {"konsole", "-e", "./bin/input", fd_str[i], NULL }; 
-
-                        if (execvp(argi[0], argi) == -1) {
-                            perror("Errore in execvp per input");
-                            exit(1);
-                        }
-                    }
-                    break;
-                case OBSTACLE:{
-                        args[0] = "./bin/obstacle";
-                        if (execvp(args[0], args) == -1) {
-                            perror("Errore in execvp per obstacle");
-                            exit(1);
-                        }
-                    }
-                    break;
-                case TARGET:{
-                        args[0] = "./bin/target";
-                        if (execvp(args[0], args) == -1) {
-                            perror("Errore in execvp per target");
-                            exit(1);
-                        }
-                    }
-                    break;
-                default:
-                    break;
-            }
-        }
-    }
-
-    // Fork for blackboard
-    pid_t pidbb = fork();
-
-    if (pidbb < 0) {
-        perror("Blackboard fork error");
-        exit(1);
-    } 
-    else if (pidbb == 0) { 
-        //All the descriptor passed to the blackboard
-        char *args[] = { "konsole","-e", "./bin/blackBoard", fd_str[0], fd_str[1], fd_str[2], fd_str[3], NULL };
-        
-        if (execvp(args[0], args) == -1) {
+    if (choice == 1) {
+        pids[BLACKBOARD] = fork();
+        if (pids[BLACKBOARD] == 0) {
+            char *argb[] = { "konsole", "-e", "./bin/blackBoard", fd_str[INPUT], fd_str[DRONE], NULL };
+            execvp(argb[0], argb);
             perror("Error in execvp for blackBoard");
+            exit(1);
+        }
+
+        pids[DRONE] = fork();
+        if (pids[DRONE] == 0) {
+            char *argd[] = { "./bin/drone", fd_str[DRONE], NULL };
+            execvp(argd[0], argd);
+            perror("Errore in execvp per drone");
+            exit(1);
+        }
+
+        pids[INPUT] = fork();
+        if (pids[INPUT] == 0) {
+            char *argi[] = { "konsole", "-e", "./bin/input", fd_str[INPUT], NULL }; 
+            execvp(argi[0], argi);
+            perror("Errore in execvp per input");
+            exit(1);
+        }
+    } else if (choice == 2) {
+        pids[TARGET] = fork();
+        if (pids[TARGET] == 0) {
+            char *argt[] = { "./bin/target", fd_str[TARGET], NULL };
+            execvp(argt[0], argt);
+            perror("Errore in execvp per target");
+            exit(1);
+        }
+
+        pids[OBSTACLE] = fork();
+        if (pids[OBSTACLE] == 0) {
+            char *argo[] = { "./bin/obstacle", fd_str[OBSTACLE], NULL };
+            execvp(argo[0], argo);
+            perror("Errore in execvp per obstacle");
             exit(1);
         }
     }
@@ -138,19 +120,21 @@ int main() {
     if (pidwd < 0) {
         perror("Watchdog fork error");
         exit(1);
-    } 
-    else if (pidwd == 0) { 
+    } else if (pidwd == 0) { 
         char *argw[] = {"./bin/watchdog", NULL };
-        
-        if (execvp(argw[0], argw) == -1) {
-            perror("Error in execvp for watchdog");
-            exit(1);
-        }
+        execvp(argw[0], argw);
+        perror("Error in execvp for watchdog");
+        exit(1);
     }
 
-    // wait for the son processes termination
-    for (int i = 0; i < PROCESSNUM + 2; i++) { // PROCESSNUM + 2 to include blackboard and watchdog
-        wait(NULL);
+    if (choice == 1) {
+        for (int i = 0; i < 4; i++) { 
+            wait(NULL);
+        }    
+    } else if (choice == 2) {
+        for (int i = 0; i < 3; i++) { 
+            wait(NULL);
+        }
     }
 
     fclose(passParamFile);
