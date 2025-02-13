@@ -13,29 +13,6 @@
 
 // Variabili globali
 extern FILE *logFile;
-char difficultyStr[10];
-
-
-// Macro per il logging della configurazione
-#define LOGCONFIG(status) {                                                      \
-    if (!logFile) {                                                              \
-        perror("Log file not initialized.\n");                                   \
-        raise(SIGTERM);                                                                  \
-    }                                                                            \
-                                                                                 \
-    char date[50];                                                               \
-    getFormattedTime(date, sizeof(date));                                        \
-                                                                                 \
-    switch ((status).difficulty) { \
-    case 1: strcpy(difficultyStr, "Easy"); break; \
-    case 2: strcpy(difficultyStr, "Hard"); break; \
-    default: strcpy(difficultyStr, "Unknown"); \
-    }                                                                             \
-                                                                                 \
-    fprintf(logFile, "%s Player Name: %s, Difficulty: %s, Level: %d, Score: %d\n",          \
-            date, (status).name, difficultyStr, (status).level, status.score);                 \
-    fflush(logFile);                                                             \
-}
 
 #define LOGSTUATUS(mode) {                                                     \
     if (!logFile) {                                                              \
@@ -59,29 +36,6 @@ char difficultyStr[10];
     fflush(logFile);                                                             \
 }
 
-#define LOGAMESAVING() { \
-    if (!logFile) {                                                             \
-        perror("Log file not initialized.\n");                                   \
-        raise(SIGTERM);                                                                  \
-    }                                                                            \
-                                                                                 \
-    char date[50];                                                               \
-    getFormattedTime(date, sizeof(date));                                        \
-    fprintf(logFile, "%s Saving the game.\n", date); \
-    fflush(logFile); \
-}
-
-#define LOGAMESAVED() { \
-    if (!logFile) {                                                             \
-        perror("Log file not initialized.\n");                                   \
-        raise(SIGTERM);                                                                  \
-    }                                                                            \
-                                                                                 \
-    char date[50];                                                               \
-    getFormattedTime(date, sizeof(date));                                        \
-    fprintf(logFile, "%s Game saved.\n", date); \
-    fflush(logFile); \
-}
 
 #define LOGQUIT(){ \
     if (!logFile) {                                                             \
@@ -122,35 +76,6 @@ char difficultyStr[10];
     fflush(logFile);                                                             \
 }
 
-// Macro per loggare la fine del gioco
-#define LOGENDGAME(status, inputStatus) {                                        \
-    if (!logFile) {                                                              \
-        perror("Log file not initialized.\n");                                   \
-        raise(SIGTERM);                                                                  \
-    }                                                                            \
-                                                                                 \
-    char date[50];                                                               \
-    getFormattedTime(date, sizeof(date));                                        \
-                                                                                 \
-    fprintf(logFile, "%s Level %d not completed. Game end. Total score: %d\n",   \
-            date, status.level, inputStatus.score);                              \
-    fflush(logFile);                                                             \
-}
-
-// Macro per loggare il completamento di un livello
-#define LOGENDLEVEL(status, inputStatus) {                                       \
-    if (!logFile) {                                                              \
-        perror("Log file not initialized.\n");                                   \
-        raise(SIGTERM);                                                                  \
-    }                                                                            \
-                                                                                 \
-    char date[50];                                                               \
-    getFormattedTime(date, sizeof(date));                                        \
-                                                                                 \
-    fprintf(logFile, "%s Level %d completed. Level %d started. Actual score: %d\n", \
-            date, status.level, status.level + 1, inputStatus.score);            \
-    fflush(logFile);                                                             \
-}
 
 #define LOGTARGETHIT(status) { \
     if (!logFile) {                                                              \

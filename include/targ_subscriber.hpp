@@ -15,6 +15,7 @@
 #include <thread>
 #include <chrono>
 #include "auxfunc2.hpp"
+#include "target.hpp"
 
 using namespace eprosima::fastdds::dds;
 

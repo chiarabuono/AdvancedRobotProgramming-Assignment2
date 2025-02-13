@@ -75,26 +75,6 @@ extern FILE *inputFile;
     fflush(inputFile); \
 }
 
-char difficultyStr[10];
-#define LOGCONFIG(status) {                                                      \
-    if (!inputFile) {                                                              \
-        perror("Log file not initialized.\n");                                   \
-        raise(SIGTERM);                                                                  \
-    }                                                                            \
-                                                                                 \
-    char date[50];                                                               \
-    getFormattedTime(date, sizeof(date));                                        \
-                                                                                 \
-    switch ((status).difficulty) { \
-    case 1: strcpy(difficultyStr, "Easy"); break; \
-    case 2: strcpy(difficultyStr, "Hard"); break; \
-    default: strcpy(difficultyStr, "Unknown"); \
-    }                                                                             \
-                                                                                 \
-    fprintf(inputFile, "%s Player Name: %s, Difficulty: %s, Level: %d, Score: %d\n",          \
-            date, (status).name, difficultyStr, (status).level, status.score);                 \
-    fflush(inputFile);                                                             \
-}
 
 #define LOGINPUTCONFIGURATION(numbersArray) {\
     if (!inputFile) {                                                             \
@@ -116,38 +96,6 @@ char difficultyStr[10];
     fflush(inputFile); \
 }
 
-#define LOGLEADERBOARD(leaderboard) {\
-    if (!inputFile) {                                                             \
-        perror("Log file not initialized.\n");                                   \
-        raise(SIGTERM);                                                                  \
-    }                                                                            \
-                                                                                 \
-    char date[50];                                                               \
-    getFormattedTime(date, sizeof(date));                                        \
-    fprintf(inputFile, "%s Leaderboard. \n", date); \
-    for(int i = 0; i < 10; i++){ \
-        fprintf(inputFile, "\t%d. %s Score: %d Level: %d\n", i + 1, leaderboard[i].name, leaderboard[i].score, leaderboard[i].level); \
-    }  \
-    fflush(inputFile); \
-}
-
-#if USE_DEBUG
-#define LOGAMESETTINGS() {\
-    if (!inputFile) {                                                             \
-        perror("Log file not initialized.\n");                                   \
-        raise(SIGTERM);                                                                  \
-    }                                                                            \
-                                                                                 \
-    char date[50];                                                               \
-    getFormattedTime(date, sizeof(date));                                        \
-    fprintf(inputFile, "%s ", date); \
-    fprintf(inputFile, "Game settings. \n\tLevel time %d  Target N# %d, Obstacle N# %d\n", levelTime, numTarget, numObstacle); \
-    fprintf(inputFile, "\tIncrement per level - time %d target %d obstacle %d\n", incTime, incTarget, incObstacle); \
-    fflush(inputFile); \
-}
-#else
-#define LOGAMESETTINGS() {}
-#endif
 
 #define LOGSTUATUS(mode) {                                                     \
     if (!inputFile) {                                                              \
@@ -169,30 +117,6 @@ char difficultyStr[10];
             fprintf(inputFile, "%s Status: Unknown.\n", date); \
     }                                                                             \
     fflush(inputFile);                                                             \
-}
-
-#define LOGAMESAVING() { \
-    if (!inputFile) {                                                             \
-        perror("Log file not initialized.\n");                                   \
-        raise(SIGTERM);                                                                  \
-    }                                                                            \
-                                                                                 \
-    char date[50];                                                               \
-    getFormattedTime(date, sizeof(date));                                        \
-    fprintf(inputFile, "%s Saving the game.\n", date); \
-    fflush(inputFile); \
-}
-
-#define LOGAMESAVED() { \
-    if (!inputFile) {                                                             \
-        perror("Log file not initialized.\n");                                   \
-        raise(SIGTERM);                                                                  \
-    }                                                                            \
-                                                                                 \
-    char date[50];                                                               \
-    getFormattedTime(date, sizeof(date));                                        \
-    fprintf(inputFile, "%s Game saved.\n", date); \
-    fflush(inputFile); \
 }
 
 

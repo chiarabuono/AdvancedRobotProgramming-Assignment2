@@ -17,10 +17,9 @@
 
 #include "targ_publisher.hpp"  // Include the header file
 #include "auxfunc2.hpp"
+#include "target.hpp"
 
 using namespace eprosima::fastdds::dds;
-
-// Remove class definition from here
 
 // Constructor implementations
 TargetPublisher::TargetPublisher()
@@ -34,16 +33,13 @@ TargetPublisher::TargetPublisher()
 
 TargetPublisher::~TargetPublisher()
 {
-    if (writer_ != nullptr)
-    {
+    if (writer_ != nullptr) {
         publisher_->delete_datawriter(writer_);
     }
-    if (publisher_ != nullptr)
-    {
+    if (publisher_ != nullptr) {
         participant_->delete_publisher(publisher_);
     }
-    if (topic_ != nullptr)
-    {
+    if (topic_ != nullptr) {
         participant_->delete_topic(topic_);
     }
     DomainParticipantFactory::get_instance()->delete_participant(participant_);
@@ -55,8 +51,7 @@ bool TargetPublisher::init()
     participantQos.name("Participant_publisher");
     participant_ = DomainParticipantFactory::get_instance()->create_participant(1, participantQos);
 
-    if (participant_ == nullptr)
-    {
+    if (participant_ == nullptr) {
         return false;
     }
 
@@ -66,24 +61,21 @@ bool TargetPublisher::init()
     // Create the publications Topic
     topic_ = participant_->create_topic("topic2", type_.get_type_name(), TOPIC_QOS_DEFAULT);
 
-    if (topic_ == nullptr)
-    {
+    if (topic_ == nullptr) {
         return false;
     }
 
     // Create the Publisher
     publisher_ = participant_->create_publisher(PUBLISHER_QOS_DEFAULT, nullptr);
 
-    if (publisher_ == nullptr)
-    {
+    if (publisher_ == nullptr) {
         return false;
     }
 
     // Create the DataWriter
     writer_ = publisher_->create_datawriter(topic_, DATAWRITER_QOS_DEFAULT, &listener_);
 
-    if (writer_ == nullptr)
-    {
+    if (writer_ == nullptr) {
         return false;
     }
     return true;
@@ -104,12 +96,11 @@ bool TargetPublisher::publish(MyTargets myTargets){
         my_message_.targets_number(myTargets.number);
 
         writer_->write(&my_message_);
+        LOGPUBLISHNEWTARGET(my_message_);
+
         return true;
     }
     return false;
-    //--------------------
-    // TO LOG
-    //--------------------
 }
 
 // Implement the listener class methods
@@ -122,20 +113,11 @@ TargetPublisher::PubListener::~PubListener()
 {
 }
 
-void TargetPublisher::PubListener::on_publication_matched(DataWriter* writer, const PublicationMatchedStatus& info)
-{
-    if (info.current_count_change == 1)
-    {
+void TargetPublisher::PubListener::on_publication_matched(DataWriter* writer, const PublicationMatchedStatus& info) {
+    if (info.current_count_change == 1) {
         matched_ = info.total_count;
-        // std::cout << "Target Publisher matched." << std::endl;
-    }
-    else if (info.current_count_change == -1)
-    {
+    } else if (info.current_count_change == -1) {
         matched_ = info.total_count;
-        // std::cout << "Target Publisher unmatched." << std::endl;
     }
-    else
-    {
-        // std::cout << info.current_count_change << " is not a valid value for PublicationMatchedStatus current count change." << std::endl;
-    }
+    LOGPUBLISHERMATCHING(info.current_count_change);
 }
